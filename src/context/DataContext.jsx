@@ -25,8 +25,12 @@ export const DataProvider = ({ children }) => {
   ];
 
   const defaultExams = [
-    { id: 1, subject: 'Physics Midterm', date: '2026-10-24', time: '09:00', location: 'Main Hall' },
-    { id: 2, subject: 'Advanced Mathematics', date: '2026-10-28', time: '10:30', location: 'Room 302' },
+    { id: 1, subject: 'Cntrl Tech', date: '2026-04-15', time: '10:00', location: 'TBD' },
+    { id: 2, subject: 'Cntrl Eng', date: '2026-04-18', time: '08:00', location: 'TBD' },
+    { id: 3, subject: 'Cntrl His', date: '2026-04-20', time: '08:00', location: 'TBD' },
+    { id: 4, subject: 'Cntrl Geo', date: '2026-04-21', time: '13:00', location: 'TBD' },
+    { id: 5, subject: 'Cntrl phy', date: '2026-04-22', time: '13:00', location: 'TBD' },
+    { id: 6, subject: 'Cntrl Math', date: '2026-04-23', time: '13:00', location: 'TBD' }
   ];
 
   const defaultLessons = [
