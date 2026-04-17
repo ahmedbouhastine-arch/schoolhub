@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PageTransition from '../components/PageTransition';
 import GlassCard from '../components/GlassCard';
 import { useData } from '../context/DataContext';
@@ -8,6 +8,37 @@ import { motion } from 'framer-motion';
 const Schedule = () => {
   const { schedule, setSchedule } = useData();
   const { isAdmin } = useAdmin();
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentDayIndex = currentTime.getDay();
+  const isCurrentDay = (day) => {
+    const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+    return daysMap[day] === currentDayIndex;
+  };
+
+  const isCurrentTime = (timeStr) => {
+    if (!timeStr) return false;
+    const [start, end] = timeStr.split(' - ');
+    if (!start || !end) return false;
+
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+
+    const nowH = currentTime.getHours();
+    const nowM = currentTime.getMinutes();
+
+    const currentMins = nowH * 60 + nowM;
+    const startMins = startH * 60 + startM;
+    const endMins = endH * 60 + endM;
+
+    return currentMins >= startMins && currentMins < endMins;
+  };
 
   const handleEdit = (id, field, value) => {
     setSchedule(prev => prev.map(row =>
@@ -123,16 +154,18 @@ const Schedule = () => {
                 }}>
                   Time
                 </th>
-                {days.map((day, index) => (
+                {days.map((day, index) => {
+                  const activeDay = isCurrentDay(day);
+                  return (
                   <th
                     key={day}
                     style={{
                       padding: '1.25rem 1rem',
-                      borderBottom: '2px solid var(--glass-border)',
-                      background: index === 5 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.3)',
-                      color: index === 5 ? 'var(--accent-secondary)' : 'var(--accent-primary)',
+                      borderBottom: activeDay ? '2px solid var(--accent-primary)' : '2px solid var(--glass-border)',
+                      background: activeDay ? 'rgba(99, 102, 241, 0.15)' : (index === 5 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.3)'),
+                      color: activeDay ? 'var(--text-primary)' : (index === 5 ? 'var(--accent-secondary)' : 'var(--accent-primary)'),
                       fontSize: '0.75rem',
-                      fontWeight: 700,
+                      fontWeight: activeDay ? 800 : 700,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       minWidth: '140px',
@@ -140,7 +173,7 @@ const Schedule = () => {
                     }}
                   >
                     {dayNames[index]}
-                    {index === 5 && (
+                    {(index === 5 || activeDay) && (
                       <span style={{
                         position: 'absolute',
                         top: '4px',
@@ -148,13 +181,14 @@ const Schedule = () => {
                         transform: 'translateX(50%)',
                         width: '4px',
                         height: '4px',
-                        background: 'var(--accent-secondary)',
+                        background: activeDay ? 'var(--accent-primary)' : 'var(--accent-secondary)',
                         borderRadius: '50%',
-                        boxShadow: '0 0 8px var(--accent-secondary)'
+                        boxShadow: `0 0 8px ${activeDay ? 'var(--accent-primary)' : 'var(--accent-secondary)'}`
                       }} />
                     )}
                   </th>
-                ))}
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -179,36 +213,59 @@ const Schedule = () => {
                   }}>
                     {slot.time}
                   </td>
-                  {days.map((day) => (
+                  {days.map((day) => {
+                    const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && slot[day];
+                    return (
                     <td
                       key={`${slot.id}-${day}`}
                       style={{
                         padding: '1rem',
                         borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        background: slot[day]
-                          ? index === 5
-                            ? 'rgba(139, 92, 246, 0.08)'
-                            : 'rgba(99, 102, 241, 0.08)'
-                          : 'transparent',
+                        background: isActive 
+                            ? 'rgba(99, 102, 241, 0.25)' 
+                            : slot[day]
+                                ? index === 5
+                                    ? 'rgba(139, 92, 246, 0.08)'
+                                    : 'rgba(99, 102, 241, 0.08)'
+                                : 'transparent',
                         transition: 'background var(--transition-base)',
                         fontSize: '0.9rem',
-                        fontWeight: slot[day] ? 500 : 400,
-                        color: slot[day] ? 'var(--text-primary)' : 'var(--text-muted)'
+                        fontWeight: slot[day] ? (isActive ? 700 : 500) : 400,
+                        color: slot[day] ? (isActive ? 'var(--accent-primary)' : 'var(--text-primary)') : 'var(--text-muted)',
+                        boxShadow: isActive ? 'inset 0 0 0 1px var(--accent-primary)' : 'none',
+                        position: 'relative'
                       }}
                       onMouseEnter={(e) => {
-                        if (!slot[day]) {
+                        if (!slot[day] && !isActive) {
                           e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!slot[day]) {
+                        if (!slot[day] && !isActive) {
                           e.currentTarget.style.background = 'transparent';
                         }
                       }}
                     >
+                      {isActive && (
+                        <motion.span
+                            animate={{ opacity: [1, 0.5, 1], scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            style={{
+                                position: 'absolute',
+                                top: 12,
+                                right: 12,
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                background: 'var(--accent-primary)',
+                                boxShadow: '0 0 8px var(--accent-primary)'
+                            }}
+                        />
+                      )}
                       {renderCell(slot, day)}
                     </td>
-                  ))}
+                    );
+                  })}
                 </motion.tr>
               ))}
             </tbody>

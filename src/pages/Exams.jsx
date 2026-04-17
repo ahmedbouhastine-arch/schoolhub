@@ -16,8 +16,44 @@ const Exams = () => {
   };
 
   const handleAdd = () => {
-    const newExam = { id: Date.now(), subject: 'New Exam', date: 'Oct 01, 2026', time: '09:00 AM', location: 'TBD', daysLeft: 10 };
+    const newExam = { id: Date.now(), subject: 'New Exam', date: '2026-10-01', time: '09:00', location: 'TBD' };
     setExams([...exams, newExam]);
+  };
+
+  const calculateDaysLeft = (dateStr) => {
+    if (!dateStr) return 0;
+    const target = new Date(dateStr);
+    if (isNaN(target.getTime())) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+    const diffTime = target - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays : 0;
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    // Format to "Oct 24, 2026" safely
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    // Account for potential timezone shifts making it display wrong day by slicing
+    try {
+        const [y, m, day] = dateStr.split('-');
+        const parseD = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
+        return parseD.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
+  
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':');
+    if (!h || !m) return timeStr;
+    const date = new Date();
+    date.setHours(parseInt(h, 10), parseInt(m, 10));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   const handleDelete = (id) => {
@@ -112,15 +148,15 @@ const Exams = () => {
                   />
                   <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <input
+                      type="date"
                       value={exam.date}
                       onChange={(e) => handleEdit(exam.id, 'date', e.target.value)}
-                      placeholder="Date"
-                      style={{ flex: 1, minWidth: '120px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
+                      style={{ flex: 1, minWidth: '130px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
                     />
                     <input
+                      type="time"
                       value={exam.time}
                       onChange={(e) => handleEdit(exam.id, 'time', e.target.value)}
-                      placeholder="Time"
                       style={{ flex: 1, minWidth: '100px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
                     />
                     <input
@@ -129,20 +165,13 @@ const Exams = () => {
                       placeholder="Location"
                       style={{ flex: 1, minWidth: '120px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
                     />
-                    <input
-                      value={exam.daysLeft}
-                      type="number"
-                      onChange={(e) => handleEdit(exam.id, 'daysLeft', parseInt(e.target.value))}
-                      placeholder="Days"
-                      style={{ width: '80px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem', textAlign: 'center' }}
-                    />
                   </div>
                 </div>
               ) : (
                 <div style={{ flex: 1, minWidth: '280px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)', fontWeight: 700 }}>{exam.subject}</h3>
-                    {exam.daysLeft <= 3 && (
+                    {calculateDaysLeft(exam.date) <= 3 && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -154,10 +183,10 @@ const Exams = () => {
                   </div>
                   <div style={{ display: 'flex', gap: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.9rem', flexWrap: 'wrap' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Calendar size={16} strokeWidth={2} /> {exam.date}
+                      <Calendar size={16} strokeWidth={2} /> {formatDate(exam.date)}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Clock size={16} strokeWidth={2} /> {exam.time}
+                      <Clock size={16} strokeWidth={2} /> {formatTime(exam.time)}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <MapPin size={16} strokeWidth={2} /> {exam.location}
@@ -174,18 +203,18 @@ const Exams = () => {
                 padding: '1rem 1.25rem',
                 background: 'rgba(0, 0, 0, 0.2)',
                 borderRadius: 'var(--border-radius)',
-                border: `2px solid ${getDaysLeftColor(exam.daysLeft)}`,
+                border: `2px solid ${getDaysLeftColor(calculateDaysLeft(exam.date))}`,
                 position: 'relative',
                 overflow: 'hidden'
               }}>
                 <span style={{
                   fontSize: '2rem',
                   fontWeight: 800,
-                  color: getDaysLeftColor(exam.daysLeft),
+                  color: getDaysLeftColor(calculateDaysLeft(exam.date)),
                   lineHeight: 1,
-                  textShadow: `0 0 20px ${getDaysLeftColor(exam.daysLeft)}40`
+                  textShadow: `0 0 20px ${getDaysLeftColor(calculateDaysLeft(exam.date))}40`
                 }}>
-                  {exam.daysLeft}
+                  {calculateDaysLeft(exam.date)}
                 </span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px', marginTop: '0.25rem' }}>
                   Days Left
