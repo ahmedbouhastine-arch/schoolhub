@@ -56,25 +56,55 @@ export const DataProvider = ({ children }) => {
   const [teachers, setTeachers] = useState(defaultTeachers);
   const [exams, setExams] = useState(defaultExams);
   const [lessons, setLessons] = useState(defaultLessons);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount
+  // Fetch from MongoDB via API on mount
   useEffect(() => {
-    const s = localStorage.getItem('sh_schedule');
-    const t = localStorage.getItem('sh_teachers');
-    const e = localStorage.getItem('sh_exams');
-    const l = localStorage.getItem('sh_lessons');
-
-    if (s) setSchedule(JSON.parse(s));
-    if (t) setTeachers(JSON.parse(t));
-    if (e) setExams(JSON.parse(e));
-    if (l) setLessons(JSON.parse(l));
+    fetch('/api/sync')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Object.keys(data).length > 0) {
+          if (data.schedule) setSchedule(data.schedule);
+          if (data.teachers) setTeachers(data.teachers);
+          if (data.exams) setExams(data.exams);
+          if (data.lessons) setLessons(data.lessons);
+        }
+        setIsLoaded(true);
+      })
+      .catch(err => {
+        console.error("Failed to fetch from DB, falling back to defaults", err);
+        setIsLoaded(true);
+      });
   }, []);
 
-  // Save to localStorage when states change
-  useEffect(() => { localStorage.setItem('sh_schedule', JSON.stringify(schedule)); }, [schedule]);
-  useEffect(() => { localStorage.setItem('sh_teachers', JSON.stringify(teachers)); }, [teachers]);
-  useEffect(() => { localStorage.setItem('sh_exams', JSON.stringify(exams)); }, [exams]);
-  useEffect(() => { localStorage.setItem('sh_lessons', JSON.stringify(lessons)); }, [lessons]);
+  // Save to MongoDB when states change by Admin
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    // We only perform the POST if we are actively loaded
+    const saveToDB = async () => {
+      try {
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ schedule, teachers, exams, lessons })
+        });
+      } catch (err) {
+        console.error("Failed to sync to DB", err);
+      }
+    };
+    
+    // Simple debounce to prevent API spamming
+    const timeoutId = setTimeout(() => {
+      saveToDB();
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [schedule, teachers, exams, lessons, isLoaded]);
+
+  if (!isLoaded) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)', fontFamily: 'Inter' }}>Loading Database Server...</div>;
+  }
 
   return (
     <DataContext.Provider value={{
