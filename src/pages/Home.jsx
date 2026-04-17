@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useData } from '../context/DataContext';
 import { motion } from 'framer-motion';
 import { Clock, AlertCircle, BookOpen, Calendar, TrendingUp, Bell } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
@@ -37,6 +38,89 @@ const StatCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => (
 );
 
 const Home = () => {
+  const { schedule, exams, teachers } = useData();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const daysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const todayStr = daysMap[currentTime.getDay()];
+
+  const todaysClasses = schedule.filter(slot => slot[todayStr]);
+  const totalClassesToday = todaysClasses.length;
+
+  const currentMins = currentTime.getHours() * 60 + currentTime.getMinutes();
+  
+  let currentClass = null;
+  let nextClass = null;
+  let completedClasses = 0;
+
+  todaysClasses.forEach(slot => {
+    const [start, end] = slot.time.split(' - ');
+    if (start && end) {
+      const [startH, startM] = start.split(':').map(Number);
+      const [endH, endM] = end.split(':').map(Number);
+      const startMins = startH * 60 + startM;
+      const endMins = endH * 60 + endM;
+
+      if (currentMins >= startMins && currentMins < endMins) {
+        currentClass = { subject: slot[todayStr], time: slot.time };
+      } else if (currentMins < startMins && (!nextClass || startMins < nextClass.startMins)) {
+        nextClass = { subject: slot[todayStr], time: start, startMins };
+      }
+
+      if (currentMins >= endMins) {
+        completedClasses++;
+      }
+    }
+  });
+
+  const calculateDaysLeft = (dateStr) => {
+    if (!dateStr) return 0;
+    const target = new Date(dateStr);
+    if (isNaN(target.getTime())) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+    const diffTime = target - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays : 0;
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    try {
+        const [y, m, day] = dateStr.split('-');
+        const parseD = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
+        return parseD.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
+  
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':');
+    if (!h || !m) return timeStr;
+    const date = new Date();
+    date.setHours(parseInt(h, 10), parseInt(m, 10));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const upcomingExams = [...exams]
+    .map(e => ({ ...e, daysLeft: calculateDaysLeft(e.date) }))
+    .filter(e => e.daysLeft >= 0)
+    .sort((a,b) => a.daysLeft - b.daysLeft);
+  
+  const nextExam = upcomingExams.length > 0 ? upcomingExams[0] : null;
+
+  const absentTeachers = teachers.filter(t => t.status && t.status.toLowerCase() !== 'present');
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -104,16 +188,16 @@ const Home = () => {
           <StatCard
             icon={Calendar}
             title="Today's Classes"
-            value="4"
-            subtitle="2 completed"
+            value={totalClassesToday.toString()}
+            subtitle={`${completedClasses} completed`}
             color="var(--accent-primary)"
             delay={0.1}
           />
           <StatCard
             icon={Clock}
             title="Next Class"
-            value="10:15"
-            subtitle="Advanced Mathematics"
+            value={nextClass ? formatTime(nextClass.time) : "None"}
+            subtitle={nextClass ? nextClass.subject : "Done for the day!"}
             color="var(--status-info)"
             delay={0.2}
           />
@@ -171,7 +255,7 @@ const Home = () => {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Current Class</h3>
-                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>10:15 AM - 11:45 AM</p>
+                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{currentClass ? currentClass.time : 'No active class'}</p>
                 </div>
               </div>
 
@@ -182,13 +266,11 @@ const Home = () => {
                 border: '1px solid rgba(255, 255, 255, 0.05)',
                 position: 'relative'
               }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600 }}>Advanced Mathematics</h4>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600 }}>{currentClass ? currentClass.subject : 'Free Period / Done'}</h4>
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <Calendar size={14} /> Room 302
+                    <Calendar size={14} /> View schedule for details
                   </span>
-                  <span style={{ opacity: 0.5 }}>•</span>
-                  <span>Mr. Anderson</span>
                 </p>
               </div>
             </GlassCard>
@@ -216,9 +298,9 @@ const Home = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Next Exam</h3>
-                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>In 3 Days</p>
+                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{nextExam ? `In ${nextExam.daysLeft} Days` : 'No upcoming exams'}</p>
                 </div>
-                <StatusBadge status="upcoming" text="Priority" />
+                {nextExam && nextExam.daysLeft <= 3 && <StatusBadge status="upcoming" text="Priority" />}
               </div>
 
               <div style={{
@@ -227,14 +309,14 @@ const Home = () => {
                 borderRadius: 'var(--border-radius)',
                 border: '1px solid rgba(255, 255, 255, 0.05)'
               }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600 }}>Physics Midterm</h4>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600 }}>{nextExam ? nextExam.subject : 'You are all clear!'}</h4>
+                {nextExam && (
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <Calendar size={14} /> Oct 24, 9:00 AM
+                    <Calendar size={14} /> {formatDate(nextExam.date)}, {formatTime(nextExam.time)}
                   </span>
-                  <span style={{ opacity: 0.5 }}>•</span>
-                  <span>Main Hall</span>
                 </p>
+                )}
               </div>
             </GlassCard>
           </motion.div>
@@ -266,38 +348,31 @@ const Home = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  border: '1px solid rgba(255, 255, 255, 0.03)',
-                  transition: 'all var(--transition-base)'
-                }}>
-                  <div>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Mrs. Smith</span>
-                    <p style={{ margin: '0.125rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Biology</p>
+                {absentTeachers.length > 0 ? absentTeachers.map(teacher => (
+                  <div key={teacher.id} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '1rem',
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    border: '1px solid rgba(255, 255, 255, 0.03)',
+                    transition: 'all var(--transition-base)'
+                  }}>
+                    <div>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{teacher.name}</span>
+                      <p style={{ margin: '0.125rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{teacher.subject}</p>
+                    </div>
+                    <StatusBadge 
+                      status={teacher.status.toLowerCase() === 'absent' ? 'absent' : 'substitute'} 
+                      text={teacher.status} 
+                    />
                   </div>
-                  <StatusBadge status="absent" text="Absent" />
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  border: '1px solid rgba(255, 255, 255, 0.03)'
-                }}>
-                  <div>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Mr. Davis</span>
-                    <p style={{ margin: '0.125rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>History</p>
+                )) : (
+                  <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--status-success)', background: 'var(--status-success-bg)', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600 }}>All teachers are present!</p>
                   </div>
-                  <StatusBadge status="substitute" text="Substitute" />
-                </div>
+                )}
               </div>
             </GlassCard>
           </motion.div>
