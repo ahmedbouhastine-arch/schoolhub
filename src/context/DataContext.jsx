@@ -19,9 +19,14 @@ export const DataProvider = ({ children }) => {
   ];
 
   const defaultTeachers = [
-    { id: 1, name: 'Mrs. Smith', subject: 'Biology', status: 'Absent', adminNote: 'Out for the week.' },
-    { id: 2, name: 'Mr. Davis', subject: 'History', status: 'Substitute', adminNote: 'Mr. Clark is subbing today.' },
-    { id: 3, name: 'Ms. Johnson', subject: 'Literature', status: 'Present', adminNote: '' }
+    { id: 1, name: 'Mr. Baligh', subject: 'Mathmatics', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 2, name: 'Ms. his&geo', subject: 'History & Geography', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 3, name: 'Ms. social', subject: 'social studies', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 4, name: 'Ms. physics', subject: 'Physics & Chemistry', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 5, name: 'Ms. Talbi', subject: 'English', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 6, name: 'Mr. Manzli', subject: 'French', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 7, name: 'Ms. arabic', subject: 'Arabic', status: 'Present', adminNote: 'Well and healthy' },
+    { id: 8, name: 'Ms. social', subject: 'Social Studies', status: 'Present', adminNote: 'Well and healthy' },
   ];
 
   const defaultExams = [
@@ -34,8 +39,16 @@ export const DataProvider = ({ children }) => {
   ];
 
   const defaultLessons = [
-    { id: 1, name: 'Mathematics - 10th Grade', link: 'https://drive.google.com/drive/folders/placeholder1', color: '#6366f1' },
-    { id: 2, name: 'History Archives', link: 'https://drive.google.com/drive/folders/placeholder2', color: '#f59e0b' },
+    { id: 1, name: 'Mathmatics', link: 'https://drive.google.com/drive/folders/1YMz-LvD1hXYoHEFTroZIjJEyCUdHbYJz?usp=drive_link', color: '#6366f1' },
+    { id: 2, name: 'Physics & Chemistry', link: 'https://drive.google.com/drive/folders/1UZcKaOk6jVePKPxdDQap5qZGDnXwXc6S?usp=drive_link', color: '#f59e0b' },
+    { id: 3, name: 'History & Geography', link: 'https://drive.google.com/drive/folders/142EGxFtopUL7kjMO58d60b2SjJ03Rf8v?usp=drive_link', color: '#f59e0b' },
+    { id: 4, name: 'English', link: 'https://drive.google.com/drive/folders/1ZFqDFRRelHPWUXPC0OXqcHR06hG3pWuA?usp=drive_link', color: '#f59e0b' },
+    { id: 5, name: 'French', link: 'https://drive.google.com/drive/folders/1rN4ZbW_3wUduuVV8nlqkWHwQgzEJ0WvM?usp=drive_link', color: '#f59e0b' },
+    { id: 6, name: 'Arabic', link: 'https://drive.google.com/drive/folders/169mLnHNDw94YWhib8j3ZHNUaz6smwFgX?usp=drive_link', color: '#f59e0b' },
+    { id: 7, name: 'Social Studies', link: 'https://drive.google.com/drive/folders/1z13qJF1ujIaZa1Le9sxgjm7lUXaYMJCy?usp=drive_link', color: '#f59e0b' },
+    { id: 8, name: 'Islamic Studies', link: 'https://drive.google.com/drive/folders/1QxPDSmM-Exn6EuguIbmkkGdRGAYAOtQF?usp=drive_link', color: '#f59e0b' },
+    { id: 9, name: 'Technique', link: 'https://drive.google.com/drive/folders/114rIqP9QU-3WjkAvdXKA64_Tet-6qted?usp=drive_link', color: '#f59e0b' },
+    { id: 10, name: 'Informatique', link: 'https://drive.google.com/drive/folders/10Hq34m68fvjZoc4vjJgxMgcXhSIgdjle?usp=drive_link', color: '#f59e0b' },
   ];
 
   // States

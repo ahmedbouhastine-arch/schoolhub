@@ -39,14 +39,14 @@ const Exams = () => {
     if (isNaN(d.getTime())) return dateStr;
     // Account for potential timezone shifts making it display wrong day by slicing
     try {
-        const [y, m, day] = dateStr.split('-');
-        const parseD = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
-        return parseD.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const [y, m, day] = dateStr.split('-');
+      const parseD = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
+      return parseD.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch (e) {
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
   };
-  
+
   const formatTime = (timeStr) => {
     if (!timeStr) return '';
     const [h, m] = timeStr.split(':');
