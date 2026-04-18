@@ -25,7 +25,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const SortableSubFolder = ({ id, sub, currentSubject, isAdmin, handleDeleteSub }) => {
+const SortableSubFolder = ({ id, sub, currentSubject, isAdmin, handleDeleteSub, handleEditSub }) => {
   const navigate = useNavigate();
   const {
     attributes,
@@ -68,8 +68,24 @@ const SortableSubFolder = ({ id, sub, currentSubject, isAdmin, handleDeleteSub }
               <GripVertical size={16} />
             </div>
           )}
-          <div style={{ color: currentSubject.color }}><FolderOpen size={24} /></div>
+          <div style={{ color: sub.color }}><FolderOpen size={24} /></div>
           <div style={{ flex: 1, fontWeight: 600, fontSize: '0.95rem' }}>{sub.name}</div>
+          
+          {isAdmin && (
+            <label 
+              onClick={(e) => e.stopPropagation()}
+              style={{ padding: '4px', cursor: 'pointer' }}
+            >
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: sub.color, border: '1px solid white' }} />
+              <input 
+                type="color" 
+                value={sub.color} 
+                onChange={(e) => handleEditSub(sub.id, 'color', e.target.value)}
+                style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+              />
+            </label>
+          )}
+
           <ChevronRight size={18} color="var(--text-tertiary)" />
           {isAdmin && (
             <button 
@@ -98,6 +114,7 @@ const SubjectDetails = () => {
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newSubName, setNewSubName] = useState('');
+  const [newSubColor, setNewSubColor] = useState(currentSubject?.color || '#6366f1');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -154,10 +171,10 @@ const SubjectDetails = () => {
   const handleAddSubSubject = () => {
     if (!newSubName) return;
     const newSub = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name: newSubName,
       link: '',
-      color: currentSubject.color,
+      color: newSubColor,
       parentId: currentSubject.id,
       subSubjects: [],
       materials: []
@@ -166,9 +183,13 @@ const SubjectDetails = () => {
     setNewSubName('');
   };
 
+  const handleEditSub = (id, field, value) => {
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l));
+  };
+
   const handleDeleteMaterial = (materialId) => {
     setLessons(prev => prev.map(l => 
-      l.id === currentSubject.id 
+      l.id.toString() === currentSubject.id.toString()
         ? { ...l, materials: (l.materials || []).filter(m => m.id !== materialId) } 
         : l
     ));
@@ -288,6 +309,10 @@ const SubjectDetails = () => {
                 fontSize: '0.95rem'
               }}
             />
+            <label style={{ cursor: 'pointer', flexShrink: 0 }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: newSubColor, border: '2px solid white' }} />
+              <input type="color" value={newSubColor} onChange={(e) => setNewSubColor(e.target.value)} style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} />
+            </label>
             <button 
               onClick={handleAddSubSubject}
               className="btn-primary"
@@ -316,6 +341,7 @@ const SubjectDetails = () => {
                   currentSubject={currentSubject}
                   isAdmin={isAdmin}
                   handleDeleteSub={handleDeleteSub}
+                  handleEditSub={handleEditSub}
                 />
               ))}
             </div>

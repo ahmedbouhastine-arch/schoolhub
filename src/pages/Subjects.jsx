@@ -87,25 +87,50 @@ const SortableFolder = ({ id, node, lessons, handleEdit, handleDelete, isAdmin }
           </div>
 
           <div style={{ flex: 1 }}>
-            {isAdmin ? (
-              <input
-                value={node.name}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => handleEdit(node.id, 'name', e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-primary)',
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
-                  outline: 'none',
-                  width: '100%',
-                  margin: '0.25rem 0'
-                }}
-              />
-            ) : (
-              <h3 style={{ margin: '0.25rem 0', fontSize: '1.1rem', fontWeight: 700 }}>{node.name}</h3>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {isAdmin ? (
+                <>
+                  <input
+                    value={node.name}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => handleEdit(node.id, 'name', e.target.value)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-primary)',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      outline: 'none',
+                      flex: 1,
+                      margin: '0.25rem 0'
+                    }}
+                  />
+                  <label 
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ 
+                      width: '24px', 
+                      height: '24px', 
+                      borderRadius: '50%', 
+                      background: node.color, 
+                      cursor: 'pointer', 
+                      border: '2px solid white', 
+                      boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+                      display: 'block',
+                      flexShrink: 0
+                    }}
+                  >
+                    <input 
+                      type="color" 
+                      value={node.color} 
+                      onChange={(e) => handleEdit(node.id, 'color', e.target.value)}
+                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                    />
+                  </label>
+                </>
+              ) : (
+                <h3 style={{ margin: '0.25rem 0', fontSize: '1.1rem', fontWeight: 700 }}>{node.name}</h3>
+              )}
+            </div>
             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               {childCount} Folders • {node.materials?.length || 0} Lessons
             </p>
