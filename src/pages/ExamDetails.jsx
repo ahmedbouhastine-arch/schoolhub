@@ -13,7 +13,7 @@ const ExamDetails = () => {
   const { exams, setExams, lessons } = useData();
   const { isAdmin } = useAdmin();
 
-  const exam = exams.find(e => e.id === parseInt(id));
+  const exam = exams.find(e => e.id.toString() === id.toString());
   const [selectedId, setSelectedId] = useState('');
 
   if (!exam) {
@@ -49,15 +49,14 @@ const ExamDetails = () => {
   const color = getDaysLeftColor(daysLeft);
 
   // Parse attached items
-  const attachedFolders = (exam.linkedLessons || []).map(linkId => lessons.find(l => l.id === parseInt(linkId))).filter(Boolean);
+  const attachedFolders = (exam.linkedLessons || []).map(linkId => lessons.find(l => l.id.toString() === linkId.toString())).filter(Boolean);
   
   // Aggregate all materials from all lessons for easy lookup
   const allPossibleMaterials = lessons.flatMap(l => (l.materials || []).map(m => ({ ...m, subjectName: l.name, subjectColor: l.color })));
-  const attachedMaterials = (exam.linkedMaterials || []).map(mId => allPossibleMaterials.find(m => m.id === parseInt(mId))).filter(Boolean);
+  const attachedMaterials = (exam.linkedMaterials || []).map(mId => allPossibleMaterials.find(m => m.id.toString() === mId.toString())).filter(Boolean);
 
   // Dropdown options: Subjects and Sub-subjects
   const mainSubjects = lessons.filter(l => l.parentId === null);
-  const getSubSubjects = (parentId) => lessons.filter(l => l.parentId === parentId);
 
   const handleAttach = () => {
     if (!selectedId) return;
@@ -68,23 +67,23 @@ const ExamDetails = () => {
 
     if (isMaterial) {
       const currentLinks = exam.linkedMaterials || [];
-      if (currentLinks.includes(realId)) return;
-      setExams(prev => prev.map(e => e.id === exam.id ? { ...e, linkedMaterials: [...currentLinks, realId] } : e));
+      if (currentLinks.map(mid => mid.toString()).includes(realId.toString())) return;
+      setExams(prev => prev.map(e => e.id.toString() === exam.id.toString() ? { ...e, linkedMaterials: [...currentLinks, realId] } : e));
     } else {
       const currentLinks = exam.linkedLessons || [];
-      if (currentLinks.includes(realId)) return;
-      setExams(prev => prev.map(e => e.id === exam.id ? { ...e, linkedLessons: [...currentLinks, realId] } : e));
+      if (currentLinks.map(lid => lid.toString()).includes(realId.toString())) return;
+      setExams(prev => prev.map(e => e.id.toString() === exam.id.toString() ? { ...e, linkedLessons: [...currentLinks, realId] } : e));
     }
     
     setSelectedId('');
   };
 
   const handleDetachFolder = (id) => {
-    setExams(prev => prev.map(e => e.id === exam.id ? { ...e, linkedLessons: (e.linkedLessons || []).filter(lid => lid.toString() !== id.toString()) } : e));
+    setExams(prev => prev.map(e => e.id.toString() === exam.id.toString() ? { ...e, linkedLessons: (e.linkedLessons || []).filter(lid => lid.toString() !== id.toString()) } : e));
   };
 
   const handleDetachMaterial = (id) => {
-    setExams(prev => prev.map(e => e.id === exam.id ? { ...e, linkedMaterials: (e.linkedMaterials || []).filter(mid => mid.toString() !== id.toString()) } : e));
+    setExams(prev => prev.map(e => e.id.toString() === exam.id.toString() ? { ...e, linkedMaterials: (e.linkedMaterials || []).filter(mid => mid.toString() !== id.toString()) } : e));
   };
 
   return (
@@ -135,14 +134,21 @@ const ExamDetails = () => {
               >
                 <option value="" disabled>Search Subjects or Specific Files...</option>
                 <optgroup label="📂 Subject Folders">
-                  {mainSubjects.map(main => (
-                    <React.Fragment key={main.id}>
-                      <option value={main.id}>{main.name}</option>
-                      {getSubSubjects(main.id).map(sub => (
-                        <option key={sub.id} value={sub.id}>  └─ {sub.name}</option>
-                      ))}
-                    </React.Fragment>
-                  ))}
+                  {(() => {
+                    const renderOptions = (parentId = null, depth = 0) => {
+                      return lessons
+                        .filter(l => l.parentId === parentId)
+                        .map(l => (
+                          <React.Fragment key={l.id}>
+                            <option value={l.id}>
+                              {'\u00A0'.repeat(depth * 3)}{depth > 0 ? '└─ ' : ''}{l.name}
+                            </option>
+                            {renderOptions(l.id, depth + 1)}
+                          </React.Fragment>
+                        ));
+                    };
+                    return renderOptions();
+                  })()}
                 </optgroup>
                 <optgroup label="📄 Individual Materials">
                   {allPossibleMaterials.map(m => (
