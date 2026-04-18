@@ -30,25 +30,25 @@ export const DataProvider = ({ children }) => {
   ];
 
   const defaultExams = [
-    { id: 1, subject: 'Cntrl Tech', date: '2026-04-15', time: '10:00', location: 'TBD' },
-    { id: 2, subject: 'Cntrl Eng', date: '2026-04-18', time: '08:00', location: 'TBD' },
-    { id: 3, subject: 'Cntrl His', date: '2026-04-20', time: '08:00', location: 'TBD' },
-    { id: 4, subject: 'Cntrl Geo', date: '2026-04-21', time: '13:00', location: 'TBD' },
-    { id: 5, subject: 'Cntrl phy', date: '2026-04-22', time: '13:00', location: 'TBD' },
-    { id: 6, subject: 'Cntrl Math', date: '2026-04-23', time: '13:00', location: 'TBD' }
+    { id: 1, subject: 'Cntrl Tech', date: '2026-04-15', time: '10:00', location: 'TBD', linkedLessons: [] },
+    { id: 2, subject: 'Cntrl Eng', date: '2026-04-18', time: '08:00', location: 'TBD', linkedLessons: [] },
+    { id: 3, subject: 'Cntrl His', date: '2026-04-20', time: '08:00', location: 'TBD', linkedLessons: [] },
+    { id: 4, subject: 'Cntrl Geo', date: '2026-04-21', time: '13:00', location: 'TBD', linkedLessons: [] },
+    { id: 5, subject: 'Cntrl phy', date: '2026-04-22', time: '13:00', location: 'TBD', linkedLessons: [] },
+    { id: 6, subject: 'Cntrl Math', date: '2026-04-23', time: '13:00', location: 'TBD', linkedLessons: [] }
   ];
 
   const defaultLessons = [
-    { id: 1, name: 'Mathmatics', link: 'https://drive.google.com/drive/folders/1YMz-LvD1hXYoHEFTroZIjJEyCUdHbYJz?usp=drive_link', color: '#6366f1' },
-    { id: 2, name: 'Physics & Chemistry', link: 'https://drive.google.com/drive/folders/1UZcKaOk6jVePKPxdDQap5qZGDnXwXc6S?usp=drive_link', color: '#f59e0b' },
-    { id: 3, name: 'History & Geography', link: 'https://drive.google.com/drive/folders/142EGxFtopUL7kjMO58d60b2SjJ03Rf8v?usp=drive_link', color: '#f59e0b' },
-    { id: 4, name: 'English', link: 'https://drive.google.com/drive/folders/1ZFqDFRRelHPWUXPC0OXqcHR06hG3pWuA?usp=drive_link', color: '#f59e0b' },
-    { id: 5, name: 'French', link: 'https://drive.google.com/drive/folders/1rN4ZbW_3wUduuVV8nlqkWHwQgzEJ0WvM?usp=drive_link', color: '#f59e0b' },
-    { id: 6, name: 'Arabic', link: 'https://drive.google.com/drive/folders/169mLnHNDw94YWhib8j3ZHNUaz6smwFgX?usp=drive_link', color: '#f59e0b' },
-    { id: 7, name: 'Social Studies', link: 'https://drive.google.com/drive/folders/1z13qJF1ujIaZa1Le9sxgjm7lUXaYMJCy?usp=drive_link', color: '#f59e0b' },
-    { id: 8, name: 'Islamic Studies', link: 'https://drive.google.com/drive/folders/1QxPDSmM-Exn6EuguIbmkkGdRGAYAOtQF?usp=drive_link', color: '#f59e0b' },
-    { id: 9, name: 'Technique', link: 'https://drive.google.com/drive/folders/114rIqP9QU-3WjkAvdXKA64_Tet-6qted?usp=drive_link', color: '#f59e0b' },
-    { id: 10, name: 'Informatique', link: 'https://drive.google.com/drive/folders/10Hq34m68fvjZoc4vjJgxMgcXhSIgdjle?usp=drive_link', color: '#f59e0b' },
+    { id: 1, name: 'Mathmatics', link: 'https://drive.google.com/drive/folders/1YMz-LvD1hXYoHEFTroZIjJEyCUdHbYJz?usp=drive_link', color: '#6366f1', materials: [] },
+    { id: 2, name: 'Physics & Chemistry', link: 'https://drive.google.com/drive/folders/1UZcKaOk6jVePKPxdDQap5qZGDnXwXc6S?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 3, name: 'History & Geography', link: 'https://drive.google.com/drive/folders/142EGxFtopUL7kjMO58d60b2SjJ03Rf8v?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 4, name: 'English', link: 'https://drive.google.com/drive/folders/1ZFqDFRRelHPWUXPC0OXqcHR06hG3pWuA?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 5, name: 'French', link: 'https://drive.google.com/drive/folders/1rN4ZbW_3wUduuVV8nlqkWHwQgzEJ0WvM?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 6, name: 'Arabic', link: 'https://drive.google.com/drive/folders/169mLnHNDw94YWhib8j3ZHNUaz6smwFgX?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 7, name: 'Social Studies', link: 'https://drive.google.com/drive/folders/1z13qJF1ujIaZa1Le9sxgjm7lUXaYMJCy?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 8, name: 'Islamic Studies', link: 'https://drive.google.com/drive/folders/1QxPDSmM-Exn6EuguIbmkkGdRGAYAOtQF?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 9, name: 'Technique', link: 'https://drive.google.com/drive/folders/114rIqP9QU-3WjkAvdXKA64_Tet-6qted?usp=drive_link', color: '#f59e0b', materials: [] },
+    { id: 10, name: 'Informatique', link: 'https://drive.google.com/drive/folders/10Hq34m68fvjZoc4vjJgxMgcXhSIgdjle?usp=drive_link', color: '#f59e0b', materials: [] },
   ];
 
   // States

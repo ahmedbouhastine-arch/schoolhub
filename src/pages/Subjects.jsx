@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageTransition from '../components/PageTransition';
 import GlassCard from '../components/GlassCard';
 import { ExternalLink, Folder, Plus, Trash2 } from 'lucide-react';
@@ -6,9 +7,10 @@ import { useData } from '../context/DataContext';
 import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';
 
-const Lessons = () => {
+const Subjects = () => {
   const { lessons, setLessons } = useData();
   const { isAdmin } = useAdmin();
+  const navigate = useNavigate();
 
   const handleEdit = (id, field, value) => {
     setLessons(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l));
@@ -34,7 +36,7 @@ const Lessons = () => {
             className="text-gradient"
             style={{ fontSize: '2.75rem', marginBottom: '0.5rem', fontWeight: 800, letterSpacing: '-1px' }}
           >
-            Course Materials
+            Subjects
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: -10 }}
@@ -42,7 +44,7 @@ const Lessons = () => {
             transition={{ duration: 0.4, delay: 0.1 }}
             style={{ color: 'var(--text-secondary)', fontSize: '1rem', margin: 0 }}
           >
-            Access your lesson notes and resources via Google Drive.
+            Access specific study materials or jump straight to the parent Google Drive folder.
           </motion.p>
         </div>
         {isAdmin && (
@@ -69,6 +71,8 @@ const Lessons = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
             whileHover={{ y: -4, scale: 1.02 }}
+            onClick={() => navigate(`/subjects/${folder.id}`)}
+            style={{ cursor: 'pointer' }}
           >
             <GlassCard style={{ display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden', height: '100%', position: 'relative' }}>
               {/* Background gradient accent */}
@@ -141,7 +145,7 @@ const Lessons = () => {
 
               <div style={{ padding: '1.5rem', borderTop: '1px solid var(--glass-border)', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 {isAdmin ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem', flex: 1 }}>
+                  <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem', flex: 1 }}>
                     <input
                       value={folder.name}
                       onChange={e => handleEdit(folder.id, 'name', e.target.value)}
@@ -226,6 +230,7 @@ const Lessons = () => {
                   href={folder.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   style={{
@@ -242,7 +247,8 @@ const Lessons = () => {
                     textDecoration: 'none',
                     boxShadow: '0 4px 16px rgba(99, 102, 241, 0.3)',
                     transition: 'all var(--transition-base)',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    marginTop: '1rem'
                   }}
                 >
                   <ExternalLink size={16} strokeWidth={2.5} />
@@ -276,4 +282,4 @@ const Lessons = () => {
   );
 };
 
-export default Lessons;
+export default Subjects;

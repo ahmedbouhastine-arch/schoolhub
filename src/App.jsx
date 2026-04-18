@@ -4,7 +4,9 @@ import Home from './pages/Home';
 import Schedule from './pages/Schedule';
 import Teachers from './pages/Teachers';
 import Exams from './pages/Exams';
-import Lessons from './pages/Lessons';
+import ExamDetails from './pages/ExamDetails';
+import Subjects from './pages/Subjects';
+import SubjectDetails from './pages/SubjectDetails';
 import AdminAuth from './pages/AdminAuth';
 
 function App() {
@@ -17,7 +19,9 @@ function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/teachers" element={<Teachers />} />
           <Route path="/exams" element={<Exams />} />
-          <Route path="/lessons" element={<Lessons />} />
+          <Route path="/exams/:id" element={<ExamDetails />} />
+          <Route path="/subjects" element={<Subjects />} />
+          <Route path="/subjects/:id" element={<SubjectDetails />} />
           <Route path="/admin" element={<AdminAuth />} />
         </Routes>
       </main>

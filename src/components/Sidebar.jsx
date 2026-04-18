@@ -8,7 +8,7 @@ const Sidebar = () => {
     { name: 'Schedule', path: '/schedule', icon: Calendar },
     { name: 'Teachers', path: '/teachers', icon: Users },
     { name: 'Exams', path: '/exams', icon: FileText },
-    { name: 'Lessons', path: '/lessons', icon: Folder },
+    { name: 'Subjects', path: '/subjects', icon: Folder },
   ];
 
   return (

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//d D:/Work/**)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)"
     ]
   }
 }

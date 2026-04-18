@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageTransition from '../components/PageTransition';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';
@@ -10,13 +11,14 @@ import { motion } from 'framer-motion';
 const Exams = () => {
   const { exams, setExams } = useData();
   const { isAdmin } = useAdmin();
+  const navigate = useNavigate();
 
   const handleEdit = (id, field, value) => {
     setExams(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
   };
 
   const handleAdd = () => {
-    const newExam = { id: Date.now(), subject: 'New Exam', date: '2026-10-01', time: '09:00', location: 'TBD' };
+    const newExam = { id: Date.now(), subject: 'New Exam', date: '2026-10-01', time: '09:00', location: 'TBD', linkedLessons: [] };
     setExams([...exams, newExam]);
   };
 
@@ -122,7 +124,10 @@ const Exams = () => {
               position: 'relative'
             }}>
               {isAdmin ? (
-                <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div
+                  onClick={() => navigate(`/exams/${exam.id}`)}
+                  style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.75rem', cursor: 'pointer' }}
+                >
                   <input
                     value={exam.subject}
                     onChange={(e) => handleEdit(exam.id, 'subject', e.target.value)}
@@ -168,7 +173,12 @@ const Exams = () => {
                   </div>
                 </div>
               ) : (
-                <div style={{ flex: 1, minWidth: '280px' }}>
+                <div
+                  onClick={() => navigate(`/exams/${exam.id}`)}
+                  style={{ flex: 1, minWidth: '280px', cursor: 'pointer', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)', fontWeight: 700 }}>{exam.subject}</h3>
                     {calculateDaysLeft(exam.date) <= 3 && (
