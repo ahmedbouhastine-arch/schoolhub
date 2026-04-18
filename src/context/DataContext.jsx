@@ -5,7 +5,33 @@ const DataContext = createContext();
 export const useData = () => useContext(DataContext);
 
 export const DataProvider = ({ children }) => {
-  // Default Initial States
+  // Remove expired exams (date + time has passed)
+  const removeExpiredExams = (examsList) => {
+    const now = new Date();
+    return examsList.filter(exam => {
+      if (!exam.date) return true;
+      const [year, month, day] = exam.date.split('-').map(Number);
+      const examDate = new Date(year, month - 1, day);
+
+      if (exam.time) {
+        const [hours, minutes] = exam.time.split(':').map(Number);
+        examDate.setHours(hours, minutes, 0, 0);
+      } else {
+        examDate.setHours(23, 59, 59, 999);
+      }
+
+      return examDate > now;
+    });
+  };
+
+  // States - start empty, will be populated from DB
+  const [schedule, setSchedule] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [lessons, setLessons] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Default data for initial DB seed
   const defaultSchedule = [
     { id: 1, time: '08:00 - 09:00', monday: 'History', tuesday: 'Informatique', wednesday: 'Informatique', thursday: 'P.E.', friday: 'Informatique (Week A)', saturday: 'English' },
     { id: 2, time: '09:00 - 10:00', monday: 'Math & Geometrie', tuesday: 'Informatique', wednesday: 'Informatique', thursday: 'P.E.', friday: 'Informatique (Week A)', saturday: 'Islamic / Social St.' },
@@ -51,28 +77,47 @@ export const DataProvider = ({ children }) => {
     { id: 10, name: 'Informatique', link: 'https://drive.google.com/drive/folders/10Hq34m68fvjZoc4vjJgxMgcXhSIgdjle?usp=drive_link', color: '#f59e0b', materials: [] },
   ];
 
-  // States
-  const [schedule, setSchedule] = useState(defaultSchedule);
-  const [teachers, setTeachers] = useState(defaultTeachers);
-  const [exams, setExams] = useState(defaultExams);
-  const [lessons, setLessons] = useState(defaultLessons);
-  const [isLoaded, setIsLoaded] = useState(false);
-
   // Fetch from MongoDB via API on mount
   useEffect(() => {
     fetch('/api/sync')
       .then(res => res.json())
       .then(data => {
-        if (data && Object.keys(data).length > 0) {
+        // If DB has data, use it; otherwise initialize with defaults
+        if (data && Object.keys(data).length > 0 && (data.schedule?.length > 0 || data.teachers?.length > 0 || data.exams?.length > 0 || data.lessons?.length > 0)) {
           if (data.schedule) setSchedule(data.schedule);
           if (data.teachers) setTeachers(data.teachers);
-          if (data.exams) setExams(data.exams);
+          if (data.exams) {
+            const validExams = removeExpiredExams(data.exams);
+            setExams(validExams);
+          }
           if (data.lessons) setLessons(data.lessons);
+        } else {
+          // DB is empty, initialize with defaults
+          setSchedule(defaultSchedule);
+          setTeachers(defaultTeachers);
+          setExams(removeExpiredExams(defaultExams));
+          setLessons(defaultLessons);
+          // Save defaults to DB
+          fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              schedule: defaultSchedule,
+              teachers: defaultTeachers,
+              exams: removeExpiredExams(defaultExams),
+              lessons: defaultLessons
+            })
+          }).catch(err => console.error("Failed to initialize DB", err));
         }
         setIsLoaded(true);
       })
       .catch(err => {
         console.error("Failed to fetch from DB, falling back to defaults", err);
+        // Fallback to defaults on error
+        setSchedule(defaultSchedule);
+        setTeachers(defaultTeachers);
+        setExams(removeExpiredExams(defaultExams));
+        setLessons(defaultLessons);
         setIsLoaded(true);
       });
   }, []);
