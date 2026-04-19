@@ -6,7 +6,7 @@ import { useData } from '../context/DataContext';
 import { useAdmin } from '../context/AdminContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { syncFolderMaterialsOnly } from '../utils/DriveSyncService';
-import { ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, FolderOpen, FileText, ChevronRight, Home, GripVertical, RefreshCw, Cloud, FileType, Image, Video, Audio, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, FolderOpen, FileText, ChevronRight, Home, GripVertical, RefreshCw, Cloud, FileType, Image, Video, Volume2, FileSpreadsheet } from 'lucide-react';
 
 // DND Kit Imports
 import {
@@ -206,7 +206,7 @@ const SubjectDetails = () => {
     const title = material.title?.toLowerCase() || '';
 
     if (mime.includes('video') || ['.mp4', '.avi', '.mov', '.webm'].some(ext => title.endsWith(ext))) return Video;
-    if (mime.includes('audio') || ['.mp3', '.wav', '.ogg'].some(ext => title.endsWith(ext))) return Audio;
+    if (mime.includes('audio') || ['.mp3', '.wav', '.ogg'].some(ext => title.endsWith(ext))) return Volume2;
     if (mime.includes('image') || ['.jpg', '.jpeg', '.png', '.gif', '.svg'].some(ext => title.endsWith(ext))) return Image;
     if (mime.includes('spreadsheet') || mime.includes('excel') || ['.xls', '.xlsx', '.csv'].some(ext => title.endsWith(ext))) return FileSpreadsheet;
     return FileType;
