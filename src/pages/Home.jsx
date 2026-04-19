@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Clock, AlertCircle, BookOpen, Calendar, TrendingUp, Bell, Loader2 } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';

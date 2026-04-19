@@ -1,3 +1,9 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import PageTransition from '../components/PageTransition';
+import GlassCard from '../components/GlassCard';
+import { useAdmin } from '../context/AdminContext';
+import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, Folder, FileText, Loader2 } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
 

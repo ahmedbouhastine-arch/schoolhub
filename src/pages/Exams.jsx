@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PageTransition from '../components/PageTransition';
+import GlassCard from '../components/GlassCard';
+import StatusBadge from '../components/StatusBadge';
 import { Calendar, MapPin, Clock, Plus, Trash2, AlertCircle, Loader2 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';

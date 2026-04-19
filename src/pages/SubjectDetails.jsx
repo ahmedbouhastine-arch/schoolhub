@@ -1,3 +1,10 @@
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import PageTransition from '../components/PageTransition';
+import GlassCard from '../components/GlassCard';
+import { useAdmin } from '../context/AdminContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { syncFolderMaterialsOnly } from '../utils/DriveSyncService';
 import { ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, FolderOpen, FileText, ChevronRight, Home, GripVertical, RefreshCw, Cloud, FileType, Image, Video, Volume2, FileSpreadsheet, Loader2 } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
 
