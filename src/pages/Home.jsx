@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useData } from '../context/DataContext';
-import { motion } from 'framer-motion';
-import { Clock, AlertCircle, BookOpen, Calendar, TrendingUp, Bell } from 'lucide-react';
+import { Clock, AlertCircle, BookOpen, Calendar, TrendingUp, Bell, Loader2 } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';
 import PageTransition from '../components/PageTransition';
+import Skeleton from '../components/Skeleton';
 
 const StatCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => (
   <motion.div
@@ -38,8 +36,29 @@ const StatCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => (
 );
 
 const Home = () => {
-  const { schedule, exams, teachers } = useData();
+  const [schedule, setSchedule] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Fetch from DB on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.schedule) setSchedule(data.schedule);
+        if (data.exams) setExams(data.exams);
+        if (data.teachers) setTeachers(data.teachers);
+      } catch (err) {
+        console.error("Failed to load home data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -128,6 +147,29 @@ const Home = () => {
       transition: { staggerChildren: 0.1 }
     }
   };
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2.5rem' }}>
+          <Skeleton width="400px" height="3.5rem" style={{ marginBottom: '1rem' }} />
+          <Skeleton width="300px" height="1.25rem" />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} height="100px" variant="glass" />
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} height="240px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

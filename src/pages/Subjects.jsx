@@ -2,11 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '../components/PageTransition';
 import GlassCard from '../components/GlassCard';
-import { ExternalLink, Folder, Plus, Trash2, ChevronRight, FileText, FolderOpen, GripVertical, Settings, RefreshCw, X, ShieldCheck } from 'lucide-react';
-import { useData } from '../context/DataContext';
+import { ExternalLink, Folder, Plus, Trash2, ChevronRight, FileText, FolderOpen, GripVertical, Settings, RefreshCw, X, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { syncDriveFolders } from '../utils/DriveSyncService';
+import Skeleton from '../components/Skeleton';
 
 // DND Kit Imports
 import {
@@ -154,12 +154,51 @@ const SortableFolder = ({ id, node, lessons, handleEdit, handleDelete, isAdmin }
 };
 
 const Subjects = () => {
-  const { lessons, setLessons, initializeDatabase } = useData();
+  const [lessons, setLessons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAdmin();
   const [showSync, setShowSync] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('gdrive_api_key') || '');
   const [rootId, setRootId] = useState(localStorage.getItem('gdrive_root_id') || '');
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Fetch from DB on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.lessons) setLessons(data.lessons);
+      } catch (err) {
+        console.error("Failed to load lessons", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Helper to save current state to DB
+  const saveToDB = useCallback(async (updatedLessons) => {
+    try {
+      const res = await fetch('/api/sync');
+      const allData = await res.json();
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...allData, lessons: updatedLessons })
+      });
+    } catch (err) {
+      console.error("Failed to sync lessons", err);
+    }
+  }, []);
+
+  // Debounce effect for reordering/editing
+  useEffect(() => {
+    if (isLoading || lessons.length === 0) return;
+    const timeoutId = setTimeout(() => saveToDB(lessons), 2000);
+    return () => clearTimeout(timeoutId);
+  }, [lessons, isLoading, saveToDB]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -241,6 +280,22 @@ const Subjects = () => {
   };
 
   const mainSubjects = lessons.filter(l => l.parentId === null);
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2.5rem' }}>
+          <Skeleton width="200px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
+          <Skeleton width="300px" height="1.25rem" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Skeleton key={i} height="180px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

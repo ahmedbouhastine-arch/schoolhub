@@ -1,20 +1,74 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import PageTransition from '../components/PageTransition';
-import GlassCard from '../components/GlassCard';
-import { useData } from '../context/DataContext';
-import { useAdmin } from '../context/AdminContext';
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, Folder, FileText } from 'lucide-react';
+import { Calendar, MapPin, Clock, ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, Folder, FileText, Loader2 } from 'lucide-react';
+import Skeleton from '../components/Skeleton';
 
 const ExamDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { exams, setExams, lessons } = useData();
+  const [exams, setExams] = useState([]);
+  const [lessons, setLessons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAdmin();
+
+  // Fetch from DB on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.exams) setExams(data.exams);
+        if (data.lessons) setLessons(data.lessons);
+      } catch (err) {
+        console.error("Failed to load data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Debounced save for exam updates
+  useEffect(() => {
+    if (isLoading || exams.length === 0) return;
+
+    const saveToDB = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const allData = await res.json();
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...allData, exams })
+        });
+      } catch (err) {
+        console.error("Failed to sync exams", err);
+      }
+    };
+
+    const timeoutId = setTimeout(saveToDB, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [exams, isLoading]);
 
   const exam = exams.find(e => e.id.toString() === id.toString());
   const [selectedId, setSelectedId] = useState('');
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <Skeleton width="120px" height="1rem" style={{ marginBottom: '1.5rem' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem', marginBottom: '3rem' }}>
+          <div>
+            <Skeleton width="400px" height="3.5rem" style={{ marginBottom: '1rem' }} />
+            <Skeleton width="300px" height="1.25rem" />
+          </div>
+          <Skeleton width="150px" height="150px" borderRadius="24px" variant="glass" />
+        </div>
+        <Skeleton width="250px" height="2rem" style={{ marginBottom: '1.5rem' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {[1, 2, 3].map(i => <Skeleton key={i} height="150px" variant="glass" />)}
+        </div>
+      </PageTransition>
+    );
+  }
 
   if (!exam) {
     return (

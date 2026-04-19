@@ -237,3 +237,24 @@ button {
   background: var(--accent-primary);
   color: white;
 }
+
+/* Skeleton Styles */
+@keyframes skeleton-pulse {
+  0% { opacity: 0.1; }
+  50% { opacity: 0.25; }
+  100% { opacity: 0.1; }
+}
+
+.skeleton {
+  background: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.skeleton-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  animation: skeleton-pulse 2s ease-in-out infinite;
+}

@@ -1,17 +1,51 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import PageTransition from '../components/PageTransition';
-import GlassCard from '../components/GlassCard';
-import StatusBadge from '../components/StatusBadge';
-import { Calendar, MapPin, Clock, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { useData } from '../context/DataContext';
+import { Calendar, MapPin, Clock, Plus, Trash2, AlertCircle, Loader2 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';
+import Skeleton from '../components/Skeleton';
 
 const Exams = () => {
-  const { exams, setExams } = useData();
+  const [exams, setExams] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
+
+  // Fetch from DB on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.exams) setExams(data.exams);
+      } catch (err) {
+        console.error("Failed to load exams", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Debounced save to DB
+  useEffect(() => {
+    if (isLoading || exams.length === 0) return;
+
+    const saveToDB = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const allData = await res.json();
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...allData, exams })
+        });
+      } catch (err) {
+        console.error("Failed to sync exams", err);
+      }
+    };
+
+    const timeoutId = setTimeout(saveToDB, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [exams, isLoading]);
 
   const handleEdit = (id, field, value) => {
     setExams(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
@@ -67,6 +101,24 @@ const Exams = () => {
     if (days <= 7) return 'var(--status-warning)';
     return 'var(--status-info)';
   };
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <Skeleton width="350px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
+            <Skeleton width="250px" height="1.25rem" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} height="120px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

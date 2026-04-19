@@ -18,17 +18,25 @@ const EXCLUDED_MIME_TYPES = [
  */
 export const extractFolderId = (url) => {
   if (!url) return null;
+  
+  // Clean the URL of trailing slashes and extra whitespace
+  const cleanUrl = url.trim().replace(/\/$/, '');
+
   // Standard folder link: /folders/ID
   // Shared link: /open?id=ID
-  const folderMatch = url.match(/folders\/([a-zA-Z0-9_-]+)/);
+  const folderMatch = cleanUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
   if (folderMatch) return folderMatch[1];
   
-  const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  const idMatch = cleanUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (idMatch) return idMatch[1];
   
   // If it's already an ID (not a full URL)
-  if (/^[a-zA-Z0-9_-]{25,}$/.test(url)) return url;
+  // Ensure it doesn't look like a URL (no slashes, no dots, etc.)
+  if (/^[a-zA-Z0-9_-]{25,}$/.test(cleanUrl) && !cleanUrl.includes('/') && !cleanUrl.includes('.')) {
+    return cleanUrl;
+  }
   
+  console.warn('Failed to extract Google Drive Folder ID from:', url);
   return null;
 };
 

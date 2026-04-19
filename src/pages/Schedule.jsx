@@ -1,13 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PageTransition from '../components/PageTransition';
 import GlassCard from '../components/GlassCard';
-import { useData } from '../context/DataContext';
 import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import Skeleton from '../components/Skeleton';
 
 const Schedule = () => {
-  const { schedule, setSchedule } = useData();
+  const [schedule, setSchedule] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAdmin();
+
+  // Fetch from DB on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.schedule) setSchedule(data.schedule);
+      } catch (err) {
+        console.error("Failed to load schedule", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Debounced save to DB
+  useEffect(() => {
+    if (isLoading || schedule.length === 0) return;
+    
+    const saveToDB = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const allData = await res.json();
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...allData, schedule })
+        });
+      } catch (err) {
+        console.error("Failed to sync schedule", err);
+      }
+    };
+
+    const timeoutId = setTimeout(saveToDB, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [schedule, isLoading]);
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -86,6 +126,18 @@ const Schedule = () => {
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2rem' }}>
+          <Skeleton width="350px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
+          <Skeleton width="250px" height="1.25rem" />
+        </div>
+        <Skeleton height="500px" variant="glass" />
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

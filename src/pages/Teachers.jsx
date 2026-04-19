@@ -1,15 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageTransition from '../components/PageTransition';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';
-import { MessageSquare, Send, Edit2, Plus, Trash2, User } from 'lucide-react';
-import { useData } from '../context/DataContext';
+import { MessageSquare, Send, Edit2, Plus, Trash2, User, Loader2 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import Skeleton from '../components/Skeleton';
 
 const Teachers = () => {
-  const { teachers, setTeachers } = useData();
+  const [teachers, setTeachers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { isAdmin } = useAdmin();
+
+  // Fetch from DB on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.teachers) setTeachers(data.teachers);
+      } catch (err) {
+        console.error("Failed to load teachers", err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Helper to save current state to DB
+  const saveToDB = async (updatedTeachers) => {
+    try {
+      // We need to fetch other data first to not overwrite them with empty arrays
+      // Alternatively, we can patch the API but for now we'll do a full sync
+      const res = await fetch('/api/sync');
+      const allData = await res.json();
+      
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...allData, teachers: updatedTeachers })
+      });
+    } catch (err) {
+      console.error("Failed to save teachers", err);
+    }
+  };
 
   const [comments, setComments] = useState({});
   const [newComment, setNewComment] = useState('');
@@ -20,20 +57,26 @@ const Teachers = () => {
   const [editStatus, setEditStatus] = useState('');
   const [editNote, setEditNote] = useState('');
 
-  const handleAdminSave = (id) => {
-    setTeachers(prev => prev.map(t =>
+  const handleAdminSave = async (id) => {
+    const updated = teachers.map(t =>
       t.id === id ? { ...t, name: editName, subject: editSubject, status: editStatus, adminNote: editNote } : t
-    ));
+    );
+    setTeachers(updated);
     setEditingId(null);
+    await saveToDB(updated);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const newTeacher = { id: Date.now(), name: 'New Teacher', subject: 'Subject', status: 'Present', adminNote: '' };
-    setTeachers([...teachers, newTeacher]);
+    const updated = [...teachers, newTeacher];
+    setTeachers(updated);
+    await saveToDB(updated);
   };
 
-  const handleDelete = (id) => {
-    setTeachers(prev => prev.filter(t => t.id !== id));
+  const handleDelete = async (id) => {
+    const updated = teachers.filter(t => t.id !== id);
+    setTeachers(updated);
+    await saveToDB(updated);
   };
 
   const startEdit = (teacher) => {
@@ -58,6 +101,24 @@ const Teachers = () => {
     if (status === 'Absent') return 'var(--status-danger)';
     return 'var(--status-warning)';
   };
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <Skeleton width="300px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
+            <Skeleton width="200px" height="1.25rem" />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Skeleton key={i} height="200px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>
