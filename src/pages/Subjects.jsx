@@ -213,21 +213,26 @@ const Subjects = () => {
       localStorage.setItem('gdrive_api_key', apiKey);
       localStorage.setItem('gdrive_root_id', rootId);
       const driveFolders = await syncDriveFolders(apiKey, rootId);
-      
-      // Merge logic: Keep existing materials if folders match?
-      // For now, let's just replace the structure but preserve materials if the ID is the same
+
+      // Merge logic: preserve existing folder properties (color, custom name) but update materials
       setLessons(prev => {
-        const materialMap = {};
-        prev.forEach(l => { if(l.materials) materialMap[l.id] = l.materials; });
-        
-        return driveFolders.map(df => ({
-          ...df,
-          materials: materialMap[df.id] || []
-        }));
+        const existingMap = new Map(prev.map(l => [l.id, l]));
+
+        return driveFolders.map(driveFolder => {
+          const existing = existingMap.get(driveFolder.id);
+          return {
+            ...driveFolder,
+            // Preserve existing color and name if folder already exists
+            color: existing?.color || driveFolder.color,
+            name: existing?.name || driveFolder.name,
+            // Use synced materials from Drive
+            materials: driveFolder.materials || []
+          };
+        });
       });
-      
+
       setShowSync(false);
-      alert('Sync successful! Folder tree updated.');
+      alert(`Sync successful! Found ${driveFolders.length} folders with lessons.`);
     } catch (err) {
       alert('Sync failed: ' + err.message);
     } finally {

@@ -5,7 +5,8 @@ import GlassCard from '../components/GlassCard';
 import { useData } from '../context/DataContext';
 import { useAdmin } from '../context/AdminContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, FolderOpen, FileText, ChevronRight, Home, GripVertical } from 'lucide-react';
+import { syncFolderMaterialsOnly } from '../utils/DriveSyncService';
+import { ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, FolderOpen, FileText, ChevronRight, Home, GripVertical, RefreshCw, Cloud, FileType, Image, Video, Audio, FileSpreadsheet } from 'lucide-react';
 
 // DND Kit Imports
 import {
@@ -115,6 +116,7 @@ const SubjectDetails = () => {
   const [newUrl, setNewUrl] = useState('');
   const [newSubName, setNewSubName] = useState('');
   const [newSubColor, setNewSubColor] = useState(currentSubject?.color || '#6366f1');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -197,6 +199,45 @@ const SubjectDetails = () => {
 
   const handleDeleteSub = (subId) => {
     setLessons(prev => prev.filter(l => l.id !== subId));
+  };
+
+  const getFileIcon = (material) => {
+    const mime = material.mimeType?.toLowerCase() || '';
+    const title = material.title?.toLowerCase() || '';
+
+    if (mime.includes('video') || ['.mp4', '.avi', '.mov', '.webm'].some(ext => title.endsWith(ext))) return Video;
+    if (mime.includes('audio') || ['.mp3', '.wav', '.ogg'].some(ext => title.endsWith(ext))) return Audio;
+    if (mime.includes('image') || ['.jpg', '.jpeg', '.png', '.gif', '.svg'].some(ext => title.endsWith(ext))) return Image;
+    if (mime.includes('spreadsheet') || mime.includes('excel') || ['.xls', '.xlsx', '.csv'].some(ext => title.endsWith(ext))) return FileSpreadsheet;
+    return FileType;
+  };
+
+  const handleRefreshMaterials = async () => {
+    if (!currentSubject?.link || !currentSubject.id) return;
+
+    setIsRefreshing(true);
+    try {
+      const apiKey = localStorage.getItem('gdrive_api_key');
+      if (!apiKey) {
+        alert('Please configure Google Drive API Key in Settings first');
+        setIsRefreshing(false);
+        return;
+      }
+
+      const newMaterials = await syncFolderMaterialsOnly(apiKey, currentSubject.link);
+
+      setLessons(prev => prev.map(l =>
+        l.id === currentSubject.id
+          ? { ...l, materials: newMaterials }
+          : l
+      ));
+
+      alert(`Refreshed! Found ${newMaterials.length} files in this folder.`);
+    } catch (err) {
+      alert('Failed to refresh: ' + err.message);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -355,9 +396,29 @@ const SubjectDetails = () => {
 
       {/* Materials Section */}
       <div style={{ marginTop: '2rem' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
-          <BookOpen strokeWidth={2.5} color="var(--accent-primary)" /> Lessons & Materials
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.5rem', margin: 0, color: 'var(--text-primary)' }}>
+            <BookOpen strokeWidth={2.5} color="var(--accent-primary)" /> Lessons & Materials
+          </h2>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {materials.length > 0 && (
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Cloud size={14} /> {materials.length} file{materials.length !== 1 ? 's' : ''} detected
+              </span>
+            )}
+            {isAdmin && currentSubject?.link && (
+              <button
+                onClick={handleRefreshMaterials}
+                disabled={isRefreshing}
+                className="btn-secondary"
+                style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+              >
+                <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh from Drive'}
+              </button>
+            )}
+          </div>
+        </div>
 
         {isAdmin && (
           <GlassCard style={{ padding: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -421,6 +482,11 @@ const SubjectDetails = () => {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 2s linear infinite; }
+      `}</style>
     </PageTransition>
   );
 };
