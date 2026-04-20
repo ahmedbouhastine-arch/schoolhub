@@ -10,34 +10,23 @@ import Skeleton from '../components/Skeleton';
 import { CacheService } from '../utils/CacheService';
 
 const Exams = () => {
-  const [exams, setExams] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [exams, setExams] = useState(() => CacheService.get()?.exams || []);
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
-  // Fetch from DB on mount
+  // Fetch from DB in background (non-blocking)
   useEffect(() => {
-    // 1. Try to load from cache first for instant UI
-    const cached = CacheService.get();
-    if (cached && cached.exams) {
-      setExams(cached.exams);
-      setIsLoading(false);
-    }
-
-    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
-        
+
         if (data.exams) {
           setExams(data.exams);
           CacheService.save(data);
         }
       } catch (err) {
         console.error("Failed to load exams", err);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchData();
@@ -120,23 +109,9 @@ const Exams = () => {
     return 'var(--status-info)';
   };
 
-  if (isLoading) {
-    return (
-      <PageTransition>
-        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <Skeleton width="350px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
-            <Skeleton width="250px" height="1.25rem" />
-          </div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} height="120px" variant="glass" />
-          ))}
-        </div>
-      </PageTransition>
-    );
-  }
+  // Show skeleton only on first visit (no cache)
+  const isFirstVisit = exams.length === 0;
+  if (isFirstVisit) {
 
   return (
     <PageTransition>

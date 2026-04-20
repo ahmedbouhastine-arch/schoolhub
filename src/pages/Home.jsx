@@ -39,40 +39,28 @@ const StatCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => (
 );
 
 const Home = () => {
-  const [schedule, setSchedule] = useState([]);
-  const [exams, setExams] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  // Initialize from cache for instant render
+  const [schedule, setSchedule] = useState(() => CacheService.get()?.schedule || []);
+  const [exams, setExams] = useState(() => CacheService.get()?.exams || []);
+  const [teachers, setTeachers] = useState(() => CacheService.get()?.teachers || []);
+  const [lastSync, setLastSync] = useState(CacheService.get()?.cachedAt || 0);
 
-  // Fetch from DB on mount
+  // Fetch from DB in background (non-blocking)
   useEffect(() => {
-    // 1. Try to load from cache first for instant UI
-    const cached = CacheService.get();
-    if (cached) {
-      if (cached.schedule) setSchedule(cached.schedule);
-      if (cached.exams) setExams(cached.exams);
-      if (cached.teachers) setTeachers(cached.teachers);
-      setIsLoading(false);
-    }
-
-    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
-        
-        // Update state with fresh data
+
         if (data.schedule) setSchedule(data.schedule);
         if (data.exams) setExams(data.exams);
         if (data.teachers) setTeachers(data.teachers);
-        
-        // Save to cache for next visit
+
         CacheService.save(data);
+        setLastSync(Date.now());
       } catch (err) {
         console.error("Failed to load home data", err);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchData();
@@ -166,28 +154,9 @@ const Home = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageTransition>
-        <div style={{ marginBottom: '2.5rem' }}>
-          <Skeleton width="400px" height="3.5rem" style={{ marginBottom: '1rem' }} />
-          <Skeleton width="300px" height="1.25rem" />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-          {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} height="100px" variant="glass" />
-          ))}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} height="240px" variant="glass" />
-          ))}
-        </div>
-      </PageTransition>
-    );
-  }
+  // Show skeleton only on first visit (no cache at all)
+  const isFirstVisit = schedule.length === 0 && exams.length === 0 && teachers.length === 0;
+  if (isFirstVisit) {
 
   return (
     <PageTransition>

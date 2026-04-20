@@ -48,7 +48,26 @@ const AdminAuth = () => {
             </div>
             <h2 style={{ marginBottom: '1rem' }}>You are logged in</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>You have access to modify statuses.</p>
-            <button 
+            <button
+              onClick={async () => {
+                const { migrateData } = await import('../utils/migrateData');
+                const success = await migrateData();
+                alert(success ? '✅ Migration complete! Data saved to database.' : '❌ Migration failed. Check console.');
+              }}
+              style={{
+                background: 'var(--accent-primary)',
+                color: 'white',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                width: '100%',
+                marginBottom: '1rem'
+              }}
+            >
+              Migrate Local Data to DB
+            </button>
+            <button
               onClick={() => {
                 logout();
                 navigate('/');
