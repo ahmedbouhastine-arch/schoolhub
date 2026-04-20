@@ -112,6 +112,22 @@ const Exams = () => {
   // Show skeleton only on first visit (no cache)
   const isFirstVisit = exams.length === 0;
   if (isFirstVisit) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <Skeleton width="350px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
+            <Skeleton width="250px" height="1.25rem" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} height="120px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

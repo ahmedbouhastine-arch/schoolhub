@@ -157,6 +157,27 @@ const Home = () => {
   // Show skeleton only on first visit (no cache at all)
   const isFirstVisit = schedule.length === 0 && exams.length === 0 && teachers.length === 0;
   if (isFirstVisit) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2.5rem' }}>
+          <Skeleton width="400px" height="3.5rem" style={{ marginBottom: '1rem' }} />
+          <Skeleton width="300px" height="1.25rem" />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} height="100px" variant="glass" />
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} height="240px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

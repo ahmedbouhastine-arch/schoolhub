@@ -3,7 +3,8 @@
     "allow": [
       "Read(//d D:/Work/**)",
       "Bash(npm run *)",
-      "Bash(curl -s http://localhost:5173)"
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(cd /d \"D:\\\\Work\\\\schoolhub\")"
     ]
   }
 }

@@ -286,6 +286,20 @@ const Subjects = () => {
   // Show skeleton only on first visit (no cache)
   const isFirstVisit = lessons.length === 0;
   if (isFirstVisit) {
+    return (
+      <PageTransition>
+        <div style={{ marginBottom: '2.5rem' }}>
+          <Skeleton width="200px" height="3.5rem" style={{ marginBottom: '0.5rem' }} />
+          <Skeleton width="300px" height="1.25rem" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Skeleton key={i} height="180px" variant="glass" />
+          ))}
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>
