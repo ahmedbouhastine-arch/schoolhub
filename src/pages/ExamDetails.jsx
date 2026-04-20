@@ -6,6 +6,7 @@ import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, ArrowLeft, BookOpen, ExternalLink, Plus, Trash2, Folder, FileText, Loader2 } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
+import { CacheService } from '../utils/CacheService';
 
 const ExamDetails = () => {
   const { id } = useParams();
@@ -17,12 +18,24 @@ const ExamDetails = () => {
 
   // Fetch from DB on mount
   useEffect(() => {
+    // 1. Try to load from cache first for instant UI
+    const cached = CacheService.get();
+    if (cached) {
+      if (cached.exams) setExams(cached.exams);
+      if (cached.lessons) setLessons(cached.lessons);
+      setIsLoading(false);
+    }
+
+    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
+        
         if (data.exams) setExams(data.exams);
         if (data.lessons) setLessons(data.lessons);
+        
+        CacheService.save(data);
       } catch (err) {
         console.error("Failed to load data", err);
       } finally {

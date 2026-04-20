@@ -6,6 +6,7 @@ import { MessageSquare, Send, Edit2, Plus, Trash2, User, Loader2 } from 'lucide-
 import { useAdmin } from '../context/AdminContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '../components/Skeleton';
+import { CacheService } from '../utils/CacheService';
 
 const Teachers = () => {
   const [teachers, setTeachers] = useState([]);
@@ -15,11 +16,23 @@ const Teachers = () => {
 
   // Fetch from DB on mount
   useEffect(() => {
+    // 1. Try to load from cache first for instant UI
+    const cached = CacheService.get();
+    if (cached && cached.teachers) {
+      setTeachers(cached.teachers);
+      setIsLoading(false);
+    }
+
+    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
-        if (data.teachers) setTeachers(data.teachers);
+        
+        if (data.teachers) {
+          setTeachers(data.teachers);
+          CacheService.save(data);
+        }
       } catch (err) {
         console.error("Failed to load teachers", err);
         setError(err.message);

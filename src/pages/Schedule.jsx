@@ -5,6 +5,7 @@ import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
+import { CacheService } from '../utils/CacheService';
 
 const Schedule = () => {
   const [schedule, setSchedule] = useState([]);
@@ -13,11 +14,23 @@ const Schedule = () => {
 
   // Fetch from DB on mount
   useEffect(() => {
+    // 1. Try to load from cache first for instant UI
+    const cached = CacheService.get();
+    if (cached && cached.schedule) {
+      setSchedule(cached.schedule);
+      setIsLoading(false);
+    }
+
+    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
-        if (data.schedule) setSchedule(data.schedule);
+        
+        if (data.schedule) {
+          setSchedule(data.schedule);
+          CacheService.save(data);
+        }
       } catch (err) {
         console.error("Failed to load schedule", err);
       } finally {

@@ -7,6 +7,7 @@ import { useAdmin } from '../context/AdminContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { syncDriveFolders } from '../utils/DriveSyncService';
 import Skeleton from '../components/Skeleton';
+import { CacheService } from '../utils/CacheService';
 
 // DND Kit Imports
 import {
@@ -164,11 +165,23 @@ const Subjects = () => {
 
   // Fetch from DB on mount
   useEffect(() => {
+    // 1. Try to load from cache first for instant UI
+    const cached = CacheService.get();
+    if (cached && cached.lessons) {
+      setLessons(cached.lessons);
+      setIsLoading(false);
+    }
+
+    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
-        if (data.lessons) setLessons(data.lessons);
+        
+        if (data.lessons) {
+          setLessons(data.lessons);
+          CacheService.save(data);
+        }
       } catch (err) {
         console.error("Failed to load lessons", err);
       } finally {

@@ -7,6 +7,7 @@ import { Calendar, MapPin, Clock, Plus, Trash2, AlertCircle, Loader2 } from 'luc
 import { useAdmin } from '../context/AdminContext';
 import { motion } from 'framer-motion';
 import Skeleton from '../components/Skeleton';
+import { CacheService } from '../utils/CacheService';
 
 const Exams = () => {
   const [exams, setExams] = useState([]);
@@ -16,11 +17,23 @@ const Exams = () => {
 
   // Fetch from DB on mount
   useEffect(() => {
+    // 1. Try to load from cache first for instant UI
+    const cached = CacheService.get();
+    if (cached && cached.exams) {
+      setExams(cached.exams);
+      setIsLoading(false);
+    }
+
+    // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
         const res = await fetch('/api/sync');
         const data = await res.json();
-        if (data.exams) setExams(data.exams);
+        
+        if (data.exams) {
+          setExams(data.exams);
+          CacheService.save(data);
+        }
       } catch (err) {
         console.error("Failed to load exams", err);
       } finally {
