@@ -1,35 +1,36 @@
 import { Storage } from '@google-cloud/storage';
 
-const PROJECT_ID = process.env.GCP_PROJECT_ID;
-const CLIENT_EMAIL = process.env.GCP_CLIENT_EMAIL;
-const PRIVATE_KEY = process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n');
-const BUCKET_NAME = process.env.GCS_BUCKET_NAME;
-
-if (!PROJECT_ID || !CLIENT_EMAIL || !PRIVATE_KEY || !BUCKET_NAME) {
-  console.warn('⚠️ GCS environment variables are missing! API will fail until configured.');
-}
-
 // Singleton storage client
 let storage;
+let bucket;
 
-try {
-  storage = new Storage({
-    projectId: PROJECT_ID,
-    credentials: {
-      client_email: CLIENT_EMAIL,
-      private_key: PRIVATE_KEY,
-    }
-  });
-} catch (e) {
-  console.error('Failed to initialize GCS:', e);
+function initGCS() {
+  const PROJECT_ID = process.env.GCP_PROJECT_ID;
+  const CLIENT_EMAIL = process.env.GCP_CLIENT_EMAIL;
+  const PRIVATE_KEY = process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const BUCKET_NAME = process.env.GCS_BUCKET_NAME;
+
+  if (!PROJECT_ID || !CLIENT_EMAIL || !PRIVATE_KEY || !BUCKET_NAME) {
+    throw new Error('Missing GCS environment variables (GCP_PROJECT_ID, GCP_CLIENT_EMAIL, GCP_PRIVATE_KEY, or GCS_BUCKET_NAME)');
+  }
+
+  if (!storage) {
+    storage = new Storage({
+      projectId: PROJECT_ID,
+      credentials: {
+        client_email: CLIENT_EMAIL,
+        private_key: PRIVATE_KEY,
+      }
+    });
+    bucket = storage.bucket(BUCKET_NAME);
+  }
 }
-
-const bucket = storage?.bucket(BUCKET_NAME);
 
 /**
  * Save data as a JSON file in the bucket
  */
 export async function saveFile(key, data) {
+  initGCS();
   if (!bucket) throw new Error('GCS Bucket not initialized');
   
   const file = bucket.file(`data/${key}.json`);
@@ -45,6 +46,7 @@ export async function saveFile(key, data) {
  * Load data from a JSON file in the bucket
  */
 export async function loadFile(key) {
+  initGCS();
   if (!bucket) throw new Error('GCS Bucket not initialized');
 
   const file = bucket.file(`data/${key}.json`);
@@ -63,6 +65,7 @@ export async function loadFile(key) {
  * Load all JSON files in the data/ directory
  */
 export async function loadAllFiles() {
+  initGCS();
   if (!bucket) throw new Error('GCS Bucket not initialized');
 
   const [files] = await bucket.getFiles({ prefix: 'data/' });
