@@ -4,7 +4,9 @@
       "Read(//d D:/Work/**)",
       "Bash(npm run *)",
       "Bash(curl -s http://localhost:5173)",
-      "Bash(cd /d \"D:\\\\Work\\\\schoolhub\")"
+      "Bash(cd /d \"D:\\\\Work\\\\schoolhub\")",
+      "Bash(git checkout *)",
+      "Bash(git restore *)"
     ]
   }
 }

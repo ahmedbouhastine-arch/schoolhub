@@ -111,9 +111,7 @@ const Exams = () => {
     return 'var(--status-info)';
   };
 
-  // Show skeleton only on first visit (no cache)
-  const isFirstVisit = exams.length === 0;
-  if (isFirstVisit) {
+  if (isLoading) {
     return (
       <PageTransition>
         <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
