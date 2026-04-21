@@ -15,7 +15,10 @@ export default async function handler(req, res) {
       return res.status(200).json(allData);
     } catch (error) {
       console.error('API GET error:', error);
-      return res.status(500).json({ error: error.message || 'Failed to fetch data' });
+      return res.status(500).json({ 
+        error: error.message || 'Failed to fetch data',
+        debug_bucket: process.env.GCS_BUCKET_NAME // HELPS US SEE IF THERE IS A TYPO
+      });
     }
   }
 
