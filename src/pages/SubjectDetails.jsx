@@ -119,15 +119,17 @@ const SubjectDetails = () => {
       setIsLoading(false);
     }
 
-    // 2. Always fetch latest from DB in background
+    // 2. Always fetch latest 'lessons' from DB in background
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const data = await res.json();
+        const res = await fetch('/api/sync?key=lessons');
+        const lessonsData = await res.json();
         
-        if (data.lessons) {
-          setLessons(data.lessons);
-          CacheService.save(data);
+        if (lessonsData) {
+          setLessons(lessonsData);
+          // Update partial cache
+          const fullCache = CacheService.get() || {};
+          CacheService.save({ ...fullCache, lessons: lessonsData });
         }
       } catch (err) {
         console.error("Failed to load lessons", err);
@@ -141,12 +143,11 @@ const SubjectDetails = () => {
   // Helper to save current state to DB
   const saveToDB = useCallback(async (updatedLessons) => {
     try {
-      const res = await fetch('/api/sync');
-      const allData = await res.json();
+      // Optimized: Direct POST without GET
       await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...allData, lessons: updatedLessons })
+        body: JSON.stringify({ lessons: updatedLessons })
       });
     } catch (err) {
       console.error("Failed to sync lessons", err);

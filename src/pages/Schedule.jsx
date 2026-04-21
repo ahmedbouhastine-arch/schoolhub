@@ -24,12 +24,13 @@ const Schedule = () => {
     // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const data = await res.json();
+        const res = await fetch('/api/sync?key=schedule');
+        const scheduleData = await res.json();
         
-        if (data.schedule) {
-          setSchedule(data.schedule);
-          CacheService.save(data);
+        if (scheduleData) {
+          setSchedule(scheduleData);
+          const fullCache = CacheService.get() || {};
+          CacheService.save({ ...fullCache, schedule: scheduleData });
         }
       } catch (err) {
         console.error("Failed to load schedule", err);
@@ -42,16 +43,14 @@ const Schedule = () => {
 
   // Debounced save to DB
   useEffect(() => {
-    if (isLoading || schedule.length === 0) return;
+    if (isLoading) return;
     
     const saveToDB = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const allData = await res.json();
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...allData, schedule })
+          body: JSON.stringify({ schedule })
         });
       } catch (err) {
         console.error("Failed to sync schedule", err);

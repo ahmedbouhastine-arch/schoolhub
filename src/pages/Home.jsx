@@ -50,9 +50,10 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Optimized: Fetch all main categories at once
         const res = await fetch('/api/sync');
         const data = await res.json();
-
+        
         if (data.schedule) setSchedule(data.schedule);
         if (data.exams) setExams(data.exams);
         if (data.teachers) setTeachers(data.teachers);

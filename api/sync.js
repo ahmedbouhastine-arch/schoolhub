@@ -4,8 +4,15 @@ import SchoolData from './models/SchoolData.js';
 export default async function handler(req, res) {
   await dbConnect();
 
+  const { key: queryKey } = req.query;
+
   if (req.method === 'GET') {
     try {
+      if (queryKey) {
+        const item = await SchoolData.findOne({ key: queryKey });
+        return res.status(200).json(item ? item.data : null);
+      }
+      
       const allData = await SchoolData.find({});
       const dict = {};
       allData.forEach(item => {
@@ -19,7 +26,6 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      // Body expects { schedule: [...], teachers: [...], exams: [...], lessons: [...] }
       const updates = req.body;
       
       const ops = Object.keys(updates).map(key => {

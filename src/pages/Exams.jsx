@@ -11,6 +11,7 @@ import { CacheService } from '../utils/CacheService';
 
 const Exams = () => {
   const [exams, setExams] = useState(() => CacheService.get()?.exams || []);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
@@ -18,15 +19,18 @@ const Exams = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const data = await res.json();
+        const res = await fetch('/api/sync?key=exams');
+        const examsData = await res.json();
 
-        if (data.exams) {
-          setExams(data.exams);
-          CacheService.save(data);
+        if (examsData) {
+          setExams(examsData);
+          const fullCache = CacheService.get() || {};
+          CacheService.save({ ...fullCache, exams: examsData });
         }
       } catch (err) {
         console.error("Failed to load exams", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -34,16 +38,14 @@ const Exams = () => {
 
   // Debounced save to DB
   useEffect(() => {
-    if (isLoading || exams.length === 0) return;
+    if (isLoading) return;
 
     const saveToDB = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const allData = await res.json();
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...allData, exams })
+          body: JSON.stringify({ exams })
         });
       } catch (err) {
         console.error("Failed to sync exams", err);

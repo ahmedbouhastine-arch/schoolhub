@@ -166,12 +166,13 @@ const Subjects = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const data = await res.json();
+        const res = await fetch('/api/sync?key=lessons');
+        const lessonsData = await res.json();
 
-        if (data.lessons) {
-          setLessons(data.lessons);
-          CacheService.save(data);
+        if (lessonsData) {
+          setLessons(lessonsData);
+          const fullCache = CacheService.get() || {};
+          CacheService.save({ ...fullCache, lessons: lessonsData });
         }
       } catch (err) {
         console.error("Failed to load lessons", err);
@@ -183,12 +184,10 @@ const Subjects = () => {
   // Helper to save current state to DB
   const saveToDB = useCallback(async (updatedLessons) => {
     try {
-      const res = await fetch('/api/sync');
-      const allData = await res.json();
       await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...allData, lessons: updatedLessons })
+        body: JSON.stringify({ lessons: updatedLessons })
       });
     } catch (err) {
       console.error("Failed to sync lessons", err);

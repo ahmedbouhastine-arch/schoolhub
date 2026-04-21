@@ -26,12 +26,13 @@ const Teachers = () => {
     // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const data = await res.json();
+        const res = await fetch('/api/sync?key=teachers');
+        const teachersData = await res.json();
         
-        if (data.teachers) {
-          setTeachers(data.teachers);
-          CacheService.save(data);
+        if (teachersData) {
+          setTeachers(teachersData);
+          const fullCache = CacheService.get() || {};
+          CacheService.save({ ...fullCache, teachers: teachersData });
         }
       } catch (err) {
         console.error("Failed to load teachers", err);
@@ -46,15 +47,10 @@ const Teachers = () => {
   // Helper to save current state to DB
   const saveToDB = async (updatedTeachers) => {
     try {
-      // We need to fetch other data first to not overwrite them with empty arrays
-      // Alternatively, we can patch the API but for now we'll do a full sync
-      const res = await fetch('/api/sync');
-      const allData = await res.json();
-      
       await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...allData, teachers: updatedTeachers })
+        body: JSON.stringify({ teachers: updatedTeachers })
       });
     } catch (err) {
       console.error("Failed to save teachers", err);

@@ -29,6 +29,7 @@ const ExamDetails = () => {
     // 2. Always fetch latest from DB in background
     const fetchData = async () => {
       try {
+        // We need both exams and lessons for the detail links
         const res = await fetch('/api/sync');
         const data = await res.json();
         
@@ -51,12 +52,10 @@ const ExamDetails = () => {
 
     const saveToDB = async () => {
       try {
-        const res = await fetch('/api/sync');
-        const allData = await res.json();
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...allData, exams })
+          body: JSON.stringify({ exams })
         });
       } catch (err) {
         console.error("Failed to sync exams", err);
