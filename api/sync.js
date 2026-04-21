@@ -1,45 +1,39 @@
-import dbConnect from './lib/mongodb.js';
-import SchoolData from './models/SchoolData.js';
+import { loadFile, loadAllFiles, saveFile } from './lib/gcs.js';
 
 export default async function handler(req, res) {
-  await dbConnect();
-
   const { key: queryKey } = req.query;
 
+  // GET: Fetch one file or all files as a dictionary
   if (req.method === 'GET') {
     try {
       if (queryKey) {
-        const item = await SchoolData.findOne({ key: queryKey });
-        return res.status(200).json(item ? item.data : null);
+        const data = await loadFile(queryKey);
+        return res.status(200).json(data);
       }
       
-      const allData = await SchoolData.find({});
-      const dict = {};
-      allData.forEach(item => {
-        dict[item.key] = item.data;
-      });
-      return res.status(200).json(dict);
+      const allData = await loadAllFiles();
+      return res.status(200).json(allData);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      console.error('API GET error:', error);
+      return res.status(500).json({ error: error.message || 'Failed to fetch data' });
     }
   }
 
+  // POST: Save one or more JSON files
   if (req.method === 'POST') {
     try {
       const updates = req.body;
-      
-      const ops = Object.keys(updates).map(key => {
-        return SchoolData.findOneAndUpdate(
-          { key },
-          { key, data: updates[key] },
-          { upsert: true, new: true }
-        );
-      });
+      if (!updates || typeof updates !== 'object') {
+        return res.status(400).json({ error: 'Body must be an object' });
+      }
 
+      const ops = Object.keys(updates).map(key => saveFile(key, updates[key]));
       await Promise.all(ops);
+
       return res.status(200).json({ success: true });
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      console.error('API POST error:', error);
+      return res.status(500).json({ error: error.message || 'Failed to save data' });
     }
   }
 
