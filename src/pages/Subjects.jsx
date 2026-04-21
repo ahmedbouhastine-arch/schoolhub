@@ -161,6 +161,7 @@ const Subjects = () => {
   const [apiKey, setApiKey] = useState(localStorage.getItem('gdrive_api_key') || '');
   const [rootId, setRootId] = useState(localStorage.getItem('gdrive_root_id') || '');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch from DB in background (non-blocking)
   useEffect(() => {
@@ -176,6 +177,8 @@ const Subjects = () => {
         }
       } catch (err) {
         console.error("Failed to load lessons", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -282,8 +285,8 @@ const Subjects = () => {
 
   const mainSubjects = lessons.filter(l => l.parentId === null);
 
-  // Show skeleton only on first visit (no cache)
-  const isFirstVisit = lessons.length === 0;
+  // Show skeleton only on first visit (isLoading AND no data)
+  const isFirstVisit = isLoading && lessons.length === 0;
   if (isFirstVisit) {
     return (
       <PageTransition>

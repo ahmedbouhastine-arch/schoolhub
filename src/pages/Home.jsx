@@ -45,6 +45,7 @@ const Home = () => {
   const [exams, setExams] = useState(() => CacheService.get()?.exams || []);
   const [teachers, setTeachers] = useState(() => CacheService.get()?.teachers || []);
   const [lastSync, setLastSync] = useState(CacheService.get()?.cachedAt || 0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch from DB in background (non-blocking)
   useEffect(() => {
@@ -62,6 +63,8 @@ const Home = () => {
         setLastSync(Date.now());
       } catch (err) {
         console.error("Failed to load home data", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -155,8 +158,8 @@ const Home = () => {
     }
   };
 
-  // Show skeleton only on first visit (no cache at all)
-  const isFirstVisit = schedule.length === 0 && exams.length === 0 && teachers.length === 0;
+  // Show skeleton only on first visit (isLoading AND no data)
+  const isFirstVisit = isLoading && schedule.length === 0 && exams.length === 0 && teachers.length === 0;
   if (isFirstVisit) {
     return (
       <PageTransition>
