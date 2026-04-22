@@ -89,6 +89,19 @@
   --text-4xl: 2.25rem;
 }
 
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+    --space-6: 16px;
+    --space-8: 20px;
+    --space-10: 24px;
+    --space-12: 32px;
+    --text-4xl: 1.75rem;
+    --text-3xl: 1.5rem;
+    --text-2xl: 1.25rem;
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

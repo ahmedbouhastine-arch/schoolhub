@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, Calendar, Users, FileText, Folder, Lock } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen }) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Schedule', path: '/schedule', icon: Calendar },
@@ -12,7 +12,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="sidebar glass-panel">
+    <aside className={`sidebar glass-panel ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-brand">
         <h1 className="text-gradient">SchoolHub</h1>
       </div>

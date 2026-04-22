@@ -384,7 +384,7 @@ const SubjectDetails = () => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-gradient"
-                style={{ fontSize: '2.5rem', margin: 0, fontWeight: 800, letterSpacing: '-1px' }}
+                style={{ fontSize: 'var(--text-4xl)', margin: 0, fontWeight: 800, letterSpacing: '-1px' }}
               >
                 {currentSubject.name}
               </motion.h1>

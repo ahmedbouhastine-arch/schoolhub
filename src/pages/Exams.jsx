@@ -146,7 +146,7 @@ const Exams = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="text-gradient"
-            style={{ fontSize: '2.75rem', marginBottom: '0.5rem', fontWeight: 800, letterSpacing: '-1px' }}
+            style={{ fontSize: 'var(--text-4xl)', marginBottom: '0.5rem', fontWeight: 800, letterSpacing: '-1px' }}
           >
             Upcoming Exams
           </motion.h1>

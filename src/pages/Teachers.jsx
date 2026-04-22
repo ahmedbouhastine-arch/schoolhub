@@ -138,7 +138,7 @@ const Teachers = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="text-gradient"
-            style={{ fontSize: '2.75rem', marginBottom: '0.5rem', fontWeight: 800, letterSpacing: '-1px' }}
+            style={{ fontSize: 'var(--text-4xl)', marginBottom: '0.5rem', fontWeight: 800, letterSpacing: '-1px' }}
           >
             Teacher Directory
           </motion.h1>
@@ -167,7 +167,7 @@ const Teachers = () => {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
         {teachers.map((teacher, index) => (
           <motion.div
             key={teacher.id}

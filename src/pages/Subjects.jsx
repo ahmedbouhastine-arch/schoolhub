@@ -313,7 +313,7 @@ const Subjects = () => {
     <PageTransition>
       <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-gradient" style={{ fontSize: '3rem', marginBottom: '0.5rem', fontWeight: 800 }}>
+          <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-gradient" style={{ fontSize: 'var(--text-4xl)', marginBottom: '0.5rem', fontWeight: 800 }}>
             Library
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
