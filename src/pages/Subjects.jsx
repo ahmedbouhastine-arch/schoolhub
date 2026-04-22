@@ -257,11 +257,12 @@ const Subjects = () => {
       localStorage.setItem('gdrive_root_id', rootId);
       const driveFolders = await syncDriveFolders(apiKey, rootId);
 
-      // Merge logic: preserve existing folder properties (color, custom name) but update materials
+      // Merge logic: preserve existing folder properties (color, custom name) and keep offline folders
       setLessons(prev => {
         const existingMap = new Map(prev.map(l => [l.id, l]));
+        const syncedIds = new Set(driveFolders.map(f => f.id));
 
-        return driveFolders.map(driveFolder => {
+        const updatedSynced = driveFolders.map(driveFolder => {
           const existing = existingMap.get(driveFolder.id);
           return {
             ...driveFolder,
@@ -272,6 +273,11 @@ const Subjects = () => {
             materials: driveFolder.materials || []
           };
         });
+
+        // Keep local-only subjects that weren't in the Drive sync
+        const localOnly = prev.filter(l => !syncedIds.has(l.id));
+
+        return [...updatedSynced, ...localOnly];
       });
 
       setShowSync(false);

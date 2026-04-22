@@ -322,6 +322,18 @@ const SubjectDetails = () => {
     }
   };
 
+  const getFileColor = (material) => {
+    const mime = material.mimeType?.toLowerCase() || '';
+    const title = material.title?.toLowerCase() || '';
+
+    if (mime.includes('video') || ['.mp4', '.avi', '.mov', '.webm'].some(ext => title.endsWith(ext))) return '#f43f5e'; // Rose
+    if (mime.includes('audio') || ['.mp3', '.wav', '.ogg'].some(ext => title.endsWith(ext))) return '#8b5cf6'; // Violet
+    if (mime.includes('image') || ['.jpg', '.jpeg', '.png', '.gif', '.svg'].some(ext => title.endsWith(ext))) return '#ec4899'; // Pink
+    if (mime.includes('spreadsheet') || mime.includes('excel') || ['.xls', '.xlsx', '.csv'].some(ext => title.endsWith(ext))) return '#10b981'; // Emerald
+    if (mime.includes('pdf') || title.endsWith('.pdf')) return '#ef4444'; // Red
+    return '#6366f1'; // Indigo
+  };
+
   return (
     <PageTransition>
       <div style={{ marginBottom: '2rem' }}>
@@ -541,26 +553,34 @@ const SubjectDetails = () => {
           </GlassCard>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
-            {materials.map((material, idx) => (
-              <motion.div key={material.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
-                <GlassCard style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', height: '100%', borderBottom: `2px solid var(--accent-primary)` }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent-primary-light)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FileText size={20} />
-                  </div>
-                  <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{material.title}</h4>
-                    <a href={material.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <ExternalLink size={12} /> View Lesson
-                    </a>
-                  </div>
-                  {isAdmin && (
-                    <button onClick={() => handleDeleteMaterial(material.id)} style={{ background: 'transparent', color: 'var(--status-danger)', border: 'none', cursor: 'pointer', padding: '0.5rem' }}>
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                </GlassCard>
-              </motion.div>
-            ))}
+            {materials.map((material, idx) => {
+              const Icon = getFileIcon(material);
+              const color = getFileColor(material);
+              return (
+                <motion.div key={material.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                  <GlassCard style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', height: '100%', borderBottom: `2px solid ${color}` }}>
+                    <div style={{ 
+                      width: '40px', height: '40px', borderRadius: '10px', 
+                      background: `${color}15`, color: color, 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                    }}>
+                      <Icon size={20} />
+                    </div>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{material.title}</h4>
+                      <a href={material.url} target="_blank" rel="noopener noreferrer" style={{ color: color, fontSize: '0.85rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <ExternalLink size={12} /> View Lesson
+                      </a>
+                    </div>
+                    {isAdmin && (
+                      <button onClick={() => handleDeleteMaterial(material.id)} style={{ background: 'transparent', color: 'var(--status-danger)', border: 'none', cursor: 'pointer', padding: '0.5rem' }}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </GlassCard>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

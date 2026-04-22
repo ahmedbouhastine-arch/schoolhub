@@ -93,6 +93,34 @@ export const fetchFolderMaterials = async (apiKey, folderId) => {
 };
 
 /**
+ * Generate a deterministic color based on a string ID
+ */
+const getDeterministicColor = (id) => {
+  const colors = [
+    '#6366f1', // Indigo
+    '#0ea5e9', // Sky
+    '#10b981', // Emerald
+    '#f59e0b', // Amber
+    '#ef4444', // Red
+    '#8b5cf6', // Violet
+    '#ec4899', // Pink
+    '#f97316', // Orange
+    '#14b8a6', // Teal
+    '#3b82f6'  // Blue
+  ];
+  
+  if (!id) return colors[0];
+  
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+
+/**
  * Sync folders and files from Google Drive recursively
  * @param {string} apiKey - Google Drive API Key
  * @param {string} rootFolderId - Root folder ID to start syncing from
@@ -142,7 +170,7 @@ export const syncDriveFolders = async (apiKey, rootFolderId) => {
         name: folder.name,
         link: folder.webViewLink,
         parentId: parentId === cleanId ? null : parentId,
-        color: '#6366f1', // Default theme color
+        color: getDeterministicColor(folder.id),
         materials
       });
 

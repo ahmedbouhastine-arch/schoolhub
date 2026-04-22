@@ -129,6 +129,14 @@ const Exams = () => {
     );
   }
 
+  const sortedExams = React.useMemo(() => {
+    return [...exams].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+  }, [exams]);
+
   return (
     <PageTransition>
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -168,7 +176,7 @@ const Exams = () => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {exams.map((exam, index) => (
+        {sortedExams.map((exam, index) => (
           <motion.div
             key={exam.id}
             initial={{ opacity: 0, x: -20 }}
