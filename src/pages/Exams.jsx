@@ -111,6 +111,14 @@ const Exams = () => {
     return 'var(--status-info)';
   };
 
+  const sortedExams = React.useMemo(() => {
+    return [...exams].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+  }, [exams]);
+
   if (isLoading) {
     return (
       <PageTransition>
@@ -128,14 +136,6 @@ const Exams = () => {
       </PageTransition>
     );
   }
-
-  const sortedExams = React.useMemo(() => {
-    return [...exams].sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA - dateB;
-    });
-  }, [exams]);
 
   return (
     <PageTransition>
