@@ -257,25 +257,67 @@ const Subjects = () => {
       localStorage.setItem('gdrive_root_id', rootId);
       const driveFolders = await syncDriveFolders(apiKey, rootId);
 
-      // Merge logic: preserve existing folder properties (color, custom name) and keep offline folders
+      // Advanced Merge logic: preserve existing folder properties (color, custom name, etc.)
       setLessons(prev => {
-        const existingMap = new Map(prev.map(l => [l.id, l]));
+        const existingLessons = [...prev];
         const syncedIds = new Set(driveFolders.map(f => f.id));
 
         const updatedSynced = driveFolders.map(driveFolder => {
-          const existing = existingMap.get(driveFolder.id);
-          return {
-            ...driveFolder,
-            // Preserve existing color and name if folder already exists
-            color: existing?.color || driveFolder.color,
-            name: existing?.name || driveFolder.name,
-            // Use synced materials from Drive
-            materials: driveFolder.materials || []
-          };
+          // 1. Try to match by Drive ID (best match)
+          let existing = existingLessons.find(l => l.id === driveFolder.id);
+          
+          // 2. Fallback: Match by link (handle folders manually linked by URL)
+          if (!existing && driveFolder.link) {
+            existing = existingLessons.find(l => l.link === driveFolder.link);
+          }
+          
+          // 3. Last fallback: Match by name and parent (risky but helpful for new syncs)
+          if (!existing) {
+            existing = existingLessons.find(l => l.name === driveFolder.name && l.parentId === driveFolder.parentId);
+          }
+
+          if (existing) {
+            // Advanced merge for materials (files)
+            const existingMaterials = existing.materials || [];
+            const driveMaterials = driveFolder.materials || [];
+            const driveLinks = new Set(driveMaterials.map(m => m.url).filter(Boolean));
+            const driveTitles = new Set(driveMaterials.map(m => m.title));
+            
+            // Deduplicate: Keep manually added materials ONLY if they aren't already represented in the Drive sync
+            const manualMaterials = existingMaterials.filter(em => {
+              // Not in Drive by ID
+              const driveIds = new Set(driveMaterials.map(dm => dm.id));
+              if (driveIds.has(em.id)) return false;
+              
+              // Not in Drive by Link
+              if (em.url && driveLinks.has(em.url)) return false;
+              
+              // Not in Drive by Title (same folder)
+              if (driveTitles.has(em.title)) return false;
+              
+              return true;
+            });
+            
+            return {
+              ...existing,
+              ...driveFolder,
+              color: existing.color || driveFolder.color,
+              name: existing.name || driveFolder.name,
+              materials: [...driveMaterials, ...manualMaterials]
+            };
+          }
+          
+          return driveFolder;
         });
 
-        // Keep local-only subjects that weren't in the Drive sync
-        const localOnly = prev.filter(l => !syncedIds.has(l.id));
+        // Keep local-only subjects that weren't in the Drive tree at all
+        const driveFolderIds = new Set(driveFolders.map(f => f.id));
+        const driveFolderLinks = new Set(driveFolders.map(f => f.link).filter(Boolean));
+        
+        const localOnly = existingLessons.filter(l => 
+          !driveFolderIds.has(l.id) && 
+          !(l.link && driveFolderLinks.has(l.link))
+        );
 
         return [...updatedSynced, ...localOnly];
       });
