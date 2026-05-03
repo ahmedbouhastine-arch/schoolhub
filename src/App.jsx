@@ -32,6 +32,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
+      <div className="mesh-overlay" />
       {/* Mobile Toggle Button */}
       <button 
         className="mobile-toggle"
