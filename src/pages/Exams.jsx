@@ -194,8 +194,7 @@ const Exams = () => {
             }}>
               {isAdmin ? (
                 <div
-                  onClick={() => navigate(`/exams/${exam.id}`)}
-                  style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.75rem', cursor: 'pointer' }}
+                  style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
                 >
                   <input
                     value={exam.subject}
