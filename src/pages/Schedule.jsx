@@ -248,6 +248,7 @@ const Schedule = () => {
 
   return (
     <PageTransition>
+      <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <motion.h1
@@ -458,205 +459,206 @@ const Schedule = () => {
             Admin Mode: Click any cell to edit
           </motion.span>
         )}
-      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <GlassCard style={{ overflowX: 'auto', padding: '0' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', minWidth: '900px' }}>
-            <thead>
-              <tr>
-                <th style={{
-                  padding: '1.25rem 1rem',
-                  borderBottom: '2px solid var(--glass-border)',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  color: 'var(--text-tertiary)',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  minWidth: '120px'
-                }}>
-                  Time
-                </th>
-                {days.map((day, index) => {
-                  const activeDay = isCurrentDay(day);
-                  const dayExams = getExamsForDay(day);
-                  return (
-                  <th
-                    key={day}
-                    onMouseEnter={() => setHoveredDay(day)}
-                    onMouseLeave={() => setHoveredDay(null)}
-                    style={{
-                      padding: '1.5rem 1rem',
-                      borderBottom: activeDay ? '2px solid var(--accent-primary)' : '2px solid var(--glass-border)',
-                      background: activeDay ? 'rgba(99, 102, 241, 0.15)' : (index === 5 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.3)'),
-                      color: activeDay ? 'var(--text-primary)' : (index === 5 ? 'var(--accent-secondary)' : 'var(--accent-primary)'),
-                      fontSize: '0.8rem',
-                      fontWeight: activeDay ? 800 : 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px',
-                      minWidth: '140px',
-                      position: 'relative',
-                      cursor: 'default'
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-                      {dayNames[index]}
-                      {dayExams.length > 0 && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            background: 'var(--status-danger)',
-                            boxShadow: '0 0 10px var(--status-danger)',
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Exam Tooltip */}
-                    {hoveredDay === day && dayExams.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          zIndex: 100,
-                          marginTop: '0.5rem',
-                          minWidth: '200px',
-                          padding: '1rem',
-                          background: 'rgba(15, 15, 19, 0.95)',
-                          backdropFilter: 'blur(12px)',
-                          border: '1px solid var(--glass-border)',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-                          textAlign: 'left',
-                          pointerEvents: 'none'
-                        }}
-                      >
-                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.7rem', color: 'var(--status-danger)', fontWeight: 800, textTransform: 'uppercase' }}>
-                          Exams this {dayNames[index]}
-                        </p>
-                        {dayExams.map(ex => (
-                          <div key={ex.id} style={{ marginBottom: '0.5rem' }}>
-                            <div style={{ color: 'white', fontSize: '0.9rem', fontWeight: 600 }}>{ex.subject}</div>
-                            <div style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
-                              {ex.isTBD ? 'Tentative' : ex.time} • {ex.location}
-                            </div>
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-
-                    {(index === 5 || activeDay) && (
-                      <span style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '50%',
-                        transform: 'translateX(50%)',
-                        width: '4px',
-                        height: '4px',
-                        background: activeDay ? 'var(--accent-primary)' : 'var(--accent-secondary)',
-                        borderRadius: '50%',
-                        boxShadow: `0 0 8px ${activeDay ? 'var(--accent-primary)' : 'var(--accent-secondary)'}`
-                      }} />
-                    )}
-                  </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {schedule.map((slot, index) => (
-                <motion.tr
-                  key={slot.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  style={{
-                    transition: 'background var(--transition-base)'
-                  }}
-                >
-                  <td style={{
-                    padding: '1rem',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          style={{ marginTop: '2rem' }}
+        >
+          <GlassCard style={{ overflowX: 'auto', padding: '0' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', minWidth: '900px' }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    padding: '1.25rem 1rem',
+                    borderBottom: '2px solid var(--glass-border)',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    color: 'var(--text-tertiary)',
+                    fontSize: '0.75rem',
                     fontWeight: 600,
-                    color: 'var(--text-secondary)',
-                    fontSize: '0.875rem',
-                    background: 'rgba(0, 0, 0, 0.15)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
                     minWidth: '120px'
                   }}>
-                    {slot.time}
-                  </td>
-                  {days.map((day) => {
-                    const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && slot[day];
+                    Time
+                  </th>
+                  {days.map((day, index) => {
+                    const activeDay = isCurrentDay(day);
+                    const dayExams = getExamsForDay(day);
                     return (
-                    <td
-                      key={`${slot.id}-${day}`}
+                    <th
+                      key={day}
+                      onMouseEnter={() => setHoveredDay(day)}
+                      onMouseLeave={() => setHoveredDay(null)}
                       style={{
-                        padding: '1rem',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        background: isActive 
-                            ? 'rgba(99, 102, 241, 0.25)' 
-                            : slot[day]
-                                ? index === 5
-                                    ? 'rgba(139, 92, 246, 0.08)'
-                                    : 'rgba(99, 102, 241, 0.08)'
-                                : 'transparent',
-                        transition: 'background var(--transition-base)',
-                        fontSize: '0.9rem',
-                        fontWeight: slot[day] ? (isActive ? 700 : 500) : 400,
-                        color: slot[day] ? (isActive ? 'var(--accent-primary)' : 'var(--text-primary)') : 'var(--text-muted)',
-                        boxShadow: isActive ? 'inset 0 0 0 1px var(--accent-primary)' : 'none',
-                        position: 'relative'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!slot[day] && !isActive) {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!slot[day] && !isActive) {
-                          e.currentTarget.style.background = 'transparent';
-                        }
+                        padding: '1.5rem 1rem',
+                        borderBottom: activeDay ? '2px solid var(--accent-primary)' : '2px solid var(--glass-border)',
+                        background: activeDay ? 'rgba(99, 102, 241, 0.15)' : (index === 5 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.3)'),
+                        color: activeDay ? 'var(--text-primary)' : (index === 5 ? 'var(--accent-secondary)' : 'var(--accent-primary)'),
+                        fontSize: '0.8rem',
+                        fontWeight: activeDay ? 800 : 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px',
+                        minWidth: '140px',
+                        position: 'relative',
+                        cursor: 'default'
                       }}
                     >
-                      {isActive && (
-                        <motion.span
-                            animate={{ opacity: [1, 0.5, 1], scale: [1, 1.2, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                        {dayNames[index]}
+                        {dayExams.length > 0 && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
                             style={{
-                                position: 'absolute',
-                                top: 12,
-                                right: 12,
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                background: 'var(--accent-primary)',
-                                boxShadow: '0 0 8px var(--accent-primary)'
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              background: 'var(--status-danger)',
+                              boxShadow: '0 0 10px var(--status-danger)',
                             }}
-                        />
+                          />
+                        )}
+                      </div>
+
+                      {/* Exam Tooltip */}
+                      {hoveredDay === day && dayExams.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 100,
+                            marginTop: '0.5rem',
+                            minWidth: '200px',
+                            padding: '1rem',
+                            background: 'rgba(15, 15, 19, 0.95)',
+                            backdropFilter: 'blur(12px)',
+                            border: '1px solid var(--glass-border)',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                            textAlign: 'left',
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.7rem', color: 'var(--status-danger)', fontWeight: 800, textTransform: 'uppercase' }}>
+                            Exams this {dayNames[index]}
+                          </p>
+                          {dayExams.map(ex => (
+                            <div key={ex.id} style={{ marginBottom: '0.5rem' }}>
+                              <div style={{ color: 'white', fontSize: '0.9rem', fontWeight: 600 }}>{ex.subject}</div>
+                              <div style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+                                {ex.isTBD ? 'Tentative' : ex.time} • {ex.location}
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
                       )}
-                      {renderCell(slot, day)}
-                    </td>
+
+                      {(index === 5 || activeDay) && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '50%',
+                          transform: 'translateX(50%)',
+                          width: '4px',
+                          height: '4px',
+                          background: activeDay ? 'var(--accent-primary)' : 'var(--accent-secondary)',
+                          borderRadius: '50%',
+                          boxShadow: `0 0 8px ${activeDay ? 'var(--accent-primary)' : 'var(--accent-secondary)'}`
+                        }} />
+                      )}
+                    </th>
                     );
                   })}
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </GlassCard>
-      </motion.div>
+                </tr>
+              </thead>
+              <tbody>
+                {schedule.map((slot, index) => (
+                  <motion.tr
+                    key={slot.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    style={{
+                      transition: 'background var(--transition-base)'
+                    }}
+                  >
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                      fontWeight: 600,
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.875rem',
+                      background: 'rgba(0, 0, 0, 0.15)',
+                      minWidth: '120px'
+                    }}>
+                      {slot.time}
+                    </td>
+                    {days.map((day) => {
+                      const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && slot[day];
+                      return (
+                      <td
+                        key={`${slot.id}-${day}`}
+                        style={{
+                          padding: '1rem',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                          background: isActive 
+                              ? 'rgba(99, 102, 241, 0.25)' 
+                              : slot[day]
+                                  ? index === 5
+                                      ? 'rgba(139, 92, 246, 0.08)'
+                                      : 'rgba(99, 102, 241, 0.08)'
+                                  : 'transparent',
+                          transition: 'background var(--transition-base)',
+                          fontSize: '0.9rem',
+                          fontWeight: slot[day] ? (isActive ? 700 : 500) : 400,
+                          color: slot[day] ? (isActive ? 'var(--accent-primary)' : 'var(--text-primary)') : 'var(--text-muted)',
+                          boxShadow: isActive ? 'inset 0 0 0 1px var(--accent-primary)' : 'none',
+                          position: 'relative'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!slot[day] && !isActive) {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!slot[day] && !isActive) {
+                            e.currentTarget.style.background = 'transparent';
+                          }
+                        }}
+                      >
+                        {isActive && (
+                          <motion.span
+                              animate={{ opacity: [1, 0.5, 1], scale: [1, 1.2, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                              style={{
+                                  position: 'absolute',
+                                  top: 12,
+                                  right: 12,
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  background: 'var(--accent-primary)',
+                                  boxShadow: '0 0 8px var(--accent-primary)'
+                              }}
+                          />
+                        )}
+                        {renderCell(slot, day)}
+                      </td>
+                      );
+                    })}
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </GlassCard>
+        </motion.div>
+      </>
     </PageTransition>
   );
 };

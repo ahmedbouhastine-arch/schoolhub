@@ -564,8 +564,5 @@ const CalendarView = ({ exams, currentMonth, setCurrentMonth, navigate }) => {
     </motion.div>
   );
 };
-    </PageTransition>
-  );
-};
 
 export default Exams;
