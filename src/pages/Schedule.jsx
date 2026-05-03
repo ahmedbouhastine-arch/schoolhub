@@ -12,7 +12,10 @@ const Schedule = () => {
   const [exams, setExams] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAdmin();
-  const [userGroup, setUserGroup] = useState(() => localStorage.getItem('userGroup') || 'all');
+  const [userGroup, setUserGroup] = useState(() => {
+    const saved = localStorage.getItem('userGroup');
+    return (saved === '1' || saved === '2') ? saved : '1';
+  });
   const [showHelp, setShowHelp] = useState(false);
   const [hoveredDay, setHoveredDay] = useState(null);
   
@@ -102,6 +105,31 @@ const Schedule = () => {
     return daysMap[day] === currentDayIndex;
   };
 
+  const isCurrentTime = (timeStr) => {
+    if (!timeStr) return false;
+    
+    // Normalize string: "8:30 to 10:30" -> ["8:30", "10:30"]
+    const parts = timeStr.toLowerCase().split(/to|-/).map(p => p.trim());
+    if (parts.length < 2) return false;
+
+    const parseTime = (str) => {
+      let [hours, minutes] = str.split(':').map(Number);
+      if (isNaN(minutes)) minutes = 0;
+      
+      // Handle AM/PM if present
+      if (str.includes('pm') && hours < 12) hours += 12;
+      if (str.includes('am') && hours === 12) hours = 0;
+      
+      return hours * 60 + minutes;
+    };
+
+    const start = parseTime(parts[0]);
+    const end = parseTime(parts[1]);
+    const current = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+    return current >= start && current < end;
+  };
+
   const getExamsForDay = (dayName) => {
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
     const targetDay = daysMap[dayName.toLowerCase()];
@@ -142,10 +170,10 @@ const Schedule = () => {
     let data = { A: null, B: null, wkA: null, wkB: null };
     let hasSplit = false;
 
-    // Parse Groups [A] / [B]
-    const groupMatch = content.match(/\[A\]\s*([^/|]*)\s*[\/|]\s*\[B\]\s*([^/|]*)/i);
+    // Parse Groups [1] / [2]
+    const groupMatch = content.match(/\[1\]\s*([^/|]*)\s*[\/|]\s*\[2\]\s*([^/|]*)/i);
     if (groupMatch) {
-      data.A = groupMatch[1].trim();
+      data.A = groupMatch[1].trim(); // map 1 to A internally or just use 1/2
       data.B = groupMatch[2].trim();
       hasSplit = true;
     }
@@ -164,14 +192,13 @@ const Schedule = () => {
   const renderCell = (row, field) => {
     const content = row[field];
     if (isAdmin) {
-      if (field === 'time') return content;
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           <input
             type="text"
             value={content}
             onChange={(e) => handleEdit(row.id, field, e.target.value)}
-            placeholder="[A] Sub / [B] Sub OR (Wk A) Sub / (Wk B) Sub"
+            placeholder={field === 'time' ? "8:30 to 10:30" : "[1] Sub / [2] Sub"}
             style={{
               width: '100%',
               padding: '0.625rem 0.5rem',
@@ -194,7 +221,7 @@ const Schedule = () => {
               e.target.style.boxShadow = 'none';
             }}
           />
-          {content && (content.includes('[A]') || content.includes('(Wk A)')) && (
+          {content && (content.includes('[1]') || content.includes('(Wk A)')) && (
             <span style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Complex Slot</span>
           )}
         </div>
@@ -215,13 +242,13 @@ const Schedule = () => {
       // Then filter by Group if applicable
       const nestedSplit = parseSplitContent(display);
       if (nestedSplit && (nestedSplit.A || nestedSplit.B)) {
-         if (userGroup === 'A') return nestedSplit.A;
-         if (userGroup === 'B') return nestedSplit.B;
+         if (userGroup === '1') return nestedSplit.A;
+         if (userGroup === '2') return nestedSplit.B;
       } else {
         // If it's a simple group split
         if (split.A && split.B) {
-          if (userGroup === 'A') return split.A;
-          if (userGroup === 'B') return split.B;
+          if (userGroup === '1') return split.A;
+          if (userGroup === '2') return split.B;
         }
       }
 
@@ -311,12 +338,12 @@ const Schedule = () => {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Split Groups (A & B)</h4>
+                  <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Split Groups (1 & 2)</h4>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     Use square brackets to define subjects for specific groups.
                   </p>
                   <code style={{ display: 'block', marginTop: '0.75rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--accent-secondary)' }}>
-                    [A] Subject A / [B] Subject B
+                    [1] Subject 1 / [2] Subject 2
                   </code>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -334,7 +361,7 @@ const Schedule = () => {
                     You can nest rules to handle complex scenarios.
                   </p>
                   <code style={{ display: 'block', marginTop: '0.75rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--accent-secondary)' }}>
-                    (Wk A) [A] CS / [B] Physics / (Wk B) Math
+                    (Wk A) [1] CS / [2] Physics / (Wk B) Math
                   </code>
                 </div>
               </div>
@@ -362,7 +389,7 @@ const Schedule = () => {
               backdropFilter: 'blur(10px)'
             }}
           >
-            {['all', 'A', 'B'].map((group) => (
+            {['1', '2'].map((group) => (
               <button
                 key={group}
                 onClick={() => setUserGroup(group)}
@@ -378,7 +405,7 @@ const Schedule = () => {
                   letterSpacing: '0.5px'
                 }}
               >
-                {group === 'all' ? 'All' : `Group ${group}`}
+                Group {group}
               </button>
             ))}
           </motion.div>
@@ -597,7 +624,7 @@ const Schedule = () => {
                       background: 'rgba(0, 0, 0, 0.15)',
                       minWidth: '120px'
                     }}>
-                      {slot.time}
+                      {renderCell(slot, 'time')}
                     </td>
                     {days.map((day) => {
                       const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && slot[day];
