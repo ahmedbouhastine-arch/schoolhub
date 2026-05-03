@@ -108,8 +108,17 @@ const Schedule = () => {
   const isCurrentTime = (timeStr) => {
     if (!timeStr) return false;
     
+    let activeTimeStr = timeStr;
+    const split = parseSplitContent(timeStr);
+    
+    // If time is split by group, pick the one for the current user
+    if (split) {
+      if (userGroup === '1') activeTimeStr = split.A || timeStr;
+      else if (userGroup === '2') activeTimeStr = split.B || timeStr;
+    }
+
     // Normalize string: "8:30 to 10:30" -> ["8:30", "10:30"]
-    const parts = timeStr.toLowerCase().split(/to|-/).map(p => p.trim());
+    const parts = activeTimeStr.toLowerCase().split(/to|-/).map(p => p.trim());
     if (parts.length < 2) return false;
 
     const parseTime = (str) => {
@@ -156,6 +165,31 @@ const Schedule = () => {
       examDate.setHours(0,0,0,0);
       return examDate.getTime() === targetDate.getTime();
     });
+  };
+
+  const getEffectiveContent = (content) => {
+    if (!content) return null;
+    const split = parseSplitContent(content);
+    if (!split) return content;
+
+    let display = content;
+    // 1. Filter by Week Cycle
+    if (split.wkA || split.wkB) {
+      display = viewWeek === 'A' ? (split.wkA || '') : (split.wkB || '');
+    }
+
+    // 2. Re-parse and filter by Group
+    const nestedSplit = parseSplitContent(display);
+    if (nestedSplit) {
+      if (userGroup === '1') return nestedSplit.A || '';
+      if (userGroup === '2') return nestedSplit.B || '';
+    } else {
+      // Simple group split check
+      if (userGroup === '1' && split.A !== null) return split.A || '';
+      if (userGroup === '2' && split.B !== null) return split.B || '';
+    }
+
+    return display;
   };
 
   const handleEdit = (id, field, value) => {
@@ -230,32 +264,12 @@ const Schedule = () => {
 
     if (!content) return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.875rem' }}>—</span>;
 
-    const split = parseSplitContent(content);
-    if (split) {
-      let display = content;
-      
-      // Filter by Week first
-      if (split.wkA && split.wkB) {
-        display = viewWeek === 'A' ? split.wkA : split.wkB;
-      }
-
-      // Then filter by Group if applicable
-      const nestedSplit = parseSplitContent(display);
-      if (nestedSplit && (nestedSplit.A || nestedSplit.B)) {
-         if (userGroup === '1') return nestedSplit.A;
-         if (userGroup === '2') return nestedSplit.B;
-      } else {
-        // If it's a simple group split
-        if (split.A && split.B) {
-          if (userGroup === '1') return split.A;
-          if (userGroup === '2') return split.B;
-        }
-      }
-
-      return display;
+    const effective = getEffectiveContent(content);
+    if (!effective || effective.trim() === '') {
+      return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.875rem' }}>—</span>;
     }
 
-    return content;
+    return effective;
   };
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -627,7 +641,8 @@ const Schedule = () => {
                       {renderCell(slot, 'time')}
                     </td>
                     {days.map((day) => {
-                      const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && slot[day];
+                      const effective = getEffectiveContent(slot[day]);
+                      const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && effective && effective.trim() !== '';
                       return (
                       <td
                         key={`${slot.id}-${day}`}
