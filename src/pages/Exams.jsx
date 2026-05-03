@@ -61,7 +61,7 @@ const Exams = () => {
   };
 
   const handleAdd = () => {
-    const newExam = { id: Date.now(), subject: 'New Exam', date: '2026-10-01', time: '09:00', location: 'TBD', linkedLessons: [] };
+    const newExam = { id: Date.now(), subject: 'New Exam', date: '2026-10-01', time: '09:00', location: 'TBD', linkedLessons: [], isTBD: false };
     setExams([...exams, newExam]);
   };
 
@@ -105,7 +105,8 @@ const Exams = () => {
     setExams(prev => prev.filter(e => e.id !== id));
   };
 
-  const getDaysLeftColor = (days) => {
+  const getDaysLeftColor = (days, isTBD) => {
+    if (isTBD) return 'var(--accent-primary)';
     if (days <= 3) return 'var(--status-danger)';
     if (days <= 7) return 'var(--status-warning)';
     return 'var(--status-info)';
@@ -219,19 +220,32 @@ const Exams = () => {
                       e.target.style.boxShadow = 'none';
                     }}
                   />
-                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)' }}>
+                      <input
+                        type="checkbox"
+                        id={`tbd-${exam.id}`}
+                        checked={exam.isTBD || false}
+                        onChange={(e) => handleEdit(exam.id, 'isTBD', e.target.checked)}
+                        style={{ cursor: 'pointer', accentColor: 'var(--accent-primary)' }}
+                      />
+                      <label htmlFor={`tbd-${exam.id}`} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' }}>
+                        Date TBD
+                      </label>
+                    </div>
                     <input
                       type="date"
                       value={exam.date}
                       onChange={(e) => handleEdit(exam.id, 'date', e.target.value)}
                       style={{ flex: 1, minWidth: '130px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
                     />
-                    <input
-                      type="time"
-                      value={exam.time}
-                      onChange={(e) => handleEdit(exam.id, 'time', e.target.value)}
-                      style={{ flex: 1, minWidth: '100px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
-                    />
+                    {!exam.isTBD && (
+                      <input
+                        type="time"
+                        value={exam.time}
+                        onChange={(e) => handleEdit(exam.id, 'time', e.target.value)}
+                        style={{ flex: 1, minWidth: '100px', padding: '0.625rem 0.875rem', background: 'rgba(0, 0, 0, 0.3)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.875rem' }}
+                      />
+                    )}
                     <input
                       value={exam.location}
                       onChange={(e) => handleEdit(exam.id, 'location', e.target.value)}
@@ -286,10 +300,10 @@ const Exams = () => {
                   </div>
                   <div style={{ display: 'flex', gap: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.9rem', flexWrap: 'wrap' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Calendar size={16} strokeWidth={2} /> {formatDate(exam.date)}
+                      <Calendar size={16} strokeWidth={2} /> {exam.isTBD ? `Week of ${formatDate(exam.date)}` : formatDate(exam.date)}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Clock size={16} strokeWidth={2} /> {formatTime(exam.time)}
+                      <Clock size={16} strokeWidth={2} /> {exam.isTBD ? 'Time TBD' : formatTime(exam.time)}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <MapPin size={16} strokeWidth={2} /> {exam.location}
@@ -306,21 +320,21 @@ const Exams = () => {
                 padding: '1rem 1.25rem',
                 background: 'rgba(0, 0, 0, 0.2)',
                 borderRadius: 'var(--border-radius)',
-                border: `2px solid ${getDaysLeftColor(calculateDaysLeft(exam.date))}`,
+                border: `2px solid ${getDaysLeftColor(calculateDaysLeft(exam.date), exam.isTBD)}`,
                 position: 'relative',
                 overflow: 'hidden'
               }}>
                 <span style={{
-                  fontSize: '2rem',
+                  fontSize: exam.isTBD ? '1.5rem' : '2rem',
                   fontWeight: 800,
-                  color: getDaysLeftColor(calculateDaysLeft(exam.date)),
+                  color: getDaysLeftColor(calculateDaysLeft(exam.date), exam.isTBD),
                   lineHeight: 1,
-                  textShadow: `0 0 20px ${getDaysLeftColor(calculateDaysLeft(exam.date))}40`
+                  textShadow: `0 0 20px ${getDaysLeftColor(calculateDaysLeft(exam.date), exam.isTBD)}40`
                 }}>
-                  {calculateDaysLeft(exam.date)}
+                  {exam.isTBD ? 'TBD' : calculateDaysLeft(exam.date)}
                 </span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px', marginTop: '0.25rem' }}>
-                  Days Left
+                  {exam.isTBD ? 'Tentative' : 'Days Left'}
                 </span>
               </div>
 
