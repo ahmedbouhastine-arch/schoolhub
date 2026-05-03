@@ -18,6 +18,7 @@ const Schedule = () => {
   });
   const [showHelp, setShowHelp] = useState(false);
   const [hoveredDay, setHoveredDay] = useState(null);
+  const [editingCell, setEditingCell] = useState(null); // { id, field, value }
   
   const getWeekType = (date) => {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -167,8 +168,35 @@ const Schedule = () => {
     });
   };
 
-  const getEffectiveContent = (content) => {
+  const getEffectiveContent = (content, dayOverride = null) => {
     if (!content) return null;
+    
+    // 0. Filter by Day Tag if present (e.g. {Mon} ... | {Tue} ...)
+    // dayOverride should be 'monday', 'tuesday', etc.
+    if (content.includes('{')) {
+      const dayTags = { 
+        monday: '{mon}', tuesday: '{tue}', wednesday: '{wed}', 
+        thursday: '{thu}', friday: '{fri}', saturday: '{sat}' 
+      };
+      
+      // Use current day if no override provided (for highlights)
+      const targetDay = dayOverride || days[currentDayIndex - 1] || 'monday';
+      const tag = dayTags[targetDay];
+      
+      const dayMatch = content.match(new RegExp(`\\${tag}\\s*([^{|]*)`, 'i'));
+      if (dayMatch) {
+        content = dayMatch[1].trim();
+        // Remove trailing separators if any
+        content = content.replace(/[|/]$/, '').trim();
+      } else if (content.includes('|')) {
+        // If there's a day-specific list but current day isn't found, 
+        // try to find a "default" or just take the last part that isn't tagged
+        const parts = content.split('|');
+        const untagged = parts.find(p => !p.includes('{'));
+        if (untagged) content = untagged.trim();
+      }
+    }
+
     const split = parseSplitContent(content);
     if (!split) return content;
 
@@ -227,44 +255,55 @@ const Schedule = () => {
     const content = row[field];
     if (isAdmin) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <input
-            type="text"
-            value={content}
-            onChange={(e) => handleEdit(row.id, field, e.target.value)}
-            placeholder={field === 'time' ? "8:30 to 10:30" : "[1] Sub / [2] Sub"}
-            style={{
-              width: '100%',
-              padding: '0.625rem 0.5rem',
-              background: 'rgba(0, 0, 0, 0.3)',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-primary)',
-              borderRadius: '8px',
-              textAlign: 'center',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              transition: 'all var(--transition-base)',
-              outline: 'none'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = 'var(--accent-primary)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.15)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'var(--glass-border)';
-              e.target.style.boxShadow = 'none';
-            }}
-          />
-          {content && (content.includes('[1]') || content.includes('(Wk A)')) && (
-            <span style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Complex Slot</span>
+        <div 
+          onClick={() => setEditingCell({ id: row.id, field, value: content || '' })}
+          style={{ 
+            cursor: 'pointer',
+            padding: '0.75rem',
+            borderRadius: '10px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px dashed var(--glass-border)',
+            transition: 'all 0.2s',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            minHeight: '50px',
+            justifyContent: 'center',
+            position: 'relative'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)';
+            e.currentTarget.style.borderColor = 'var(--accent-primary)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+            e.currentTarget.style.borderColor = 'var(--glass-border)';
+          }}
+        >
+          <span style={{ fontSize: '0.85rem', color: content ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: content ? 600 : 400 }}>
+            {content || (field === 'time' ? 'Set Time' : 'Empty')}
+          </span>
+          {content && (content.includes('[1]') || content.includes('(Wk A)') || content.includes('{')) && (
+            <span style={{ 
+              fontSize: '0.6rem', 
+              color: 'var(--accent-primary)', 
+              fontWeight: 800, 
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Complex Rule
+            </span>
           )}
+          <div style={{ position: 'absolute', top: '4px', right: '4px', color: 'var(--text-tertiary)', opacity: 0.5 }}>
+            <HelpCircle size={10} />
+          </div>
         </div>
       );
     }
 
     if (!content) return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.875rem' }}>—</span>;
 
-    const effective = getEffectiveContent(content);
+    const effective = getEffectiveContent(content, field === 'time' ? days[currentDayIndex - 1] : field);
     if (!effective || effective.trim() === '') {
       return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.875rem' }}>—</span>;
     }
@@ -376,6 +415,15 @@ const Schedule = () => {
                   </p>
                   <code style={{ display: 'block', marginTop: '0.75rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--accent-secondary)' }}>
                     (Wk A) [1] CS / [2] Physics / (Wk B) Math
+                  </code>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Day Overrides (Advanced)</h4>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Specify different values for different days in one cell.
+                  </p>
+                  <code style={{ display: 'block', marginTop: '0.75rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--accent-secondary)' }}>
+                    {'{Mon}'} 8:00 | {'{Tue}'} 8:30
                   </code>
                 </div>
               </div>
@@ -641,8 +689,9 @@ const Schedule = () => {
                       {renderCell(slot, 'time')}
                     </td>
                     {days.map((day) => {
-                      const effective = getEffectiveContent(slot[day]);
-                      const isActive = isCurrentDay(day) && isCurrentTime(slot.time) && effective && effective.trim() !== '';
+                      const effective = getEffectiveContent(slot[day], day);
+                      const activeTimeStr = getEffectiveContent(slot.time, day);
+                      const isActive = isCurrentDay(day) && isCurrentTime(activeTimeStr) && effective && effective.trim() !== '';
                       return (
                       <td
                         key={`${slot.id}-${day}`}
@@ -701,7 +750,175 @@ const Schedule = () => {
           </GlassCard>
         </motion.div>
       </>
+
+      {/* Cell Editor Modal */}
+      {editingCell && (
+        <CellEditor 
+          cell={editingCell} 
+          onClose={() => setEditingCell(null)} 
+          onSave={(newValue) => {
+            handleEdit(editingCell.id, editingCell.field, newValue);
+            setEditingCell(null);
+          }}
+        />
+      )}
     </PageTransition>
+  );
+};
+
+const CellEditor = ({ cell, onClose, onSave }) => {
+  const [type, setType] = useState('simple'); // simple, split_group, split_week
+  const [val1, setVal1] = useState('');
+  const [val2, setVal2] = useState('');
+  const [dayOverride, setDayOverride] = useState('all');
+
+  useEffect(() => {
+    // Basic auto-detection of current content to prepopulate
+    const c = cell.value;
+    if (c.includes('[1]')) {
+      const m = c.match(/\[1\]\s*([^/|]*)\s*[\/|]\s*\[2\]\s*([^/|]*)/i);
+      if (m) { setType('split_group'); setVal1(m[1].trim()); setVal2(m[2].trim()); }
+    } else if (c.includes('(Wk A)')) {
+      const m = c.match(/\(Wk A\)\s*([^/|]*)\s*[\/|]\s*\(Wk B\)\s*([^/|]*)/i);
+      if (m) { setType('split_week'); setVal1(m[1].trim()); setVal2(m[2].trim()); }
+    } else {
+      setVal1(c);
+    }
+  }, [cell.value]);
+
+  const handleSave = () => {
+    let final = val1;
+    if (type === 'split_group') final = `[1] ${val1} / [2] ${val2}`;
+    if (type === 'split_week') final = `(Wk A) ${val1} / (Wk B) ${val2}`;
+    
+    // Day wrap if selected
+    if (dayOverride !== 'all') {
+      const dayTags = { monday: '{Mon}', tuesday: '{Tue}', wednesday: '{Wed}', thursday: '{Thu}', friday: '{Fri}', saturday: '{Sat}' };
+      final = `${dayTags[dayOverride]} ${final}`;
+    }
+    
+    onSave(final);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1.5rem',
+      background: 'rgba(0,0,0,0.6)',
+      backdropFilter: 'blur(8px)'
+    }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        style={{
+          width: '100%',
+          maxWidth: '500px',
+          background: 'rgba(20, 20, 25, 0.95)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '24px',
+          padding: '2rem',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>
+            Edit {cell.field === 'time' ? 'Timing' : 'Subject'}
+          </h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Format Type */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Format Type</label>
+            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '0.25rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+              {['simple', 'split_group', 'split_week'].map(t => (
+                <button
+                  key={t}
+                  onClick={() => setType(t)}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    borderRadius: '10px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    background: type === t ? 'var(--accent-primary)' : 'transparent',
+                    color: type === t ? 'white' : 'var(--text-secondary)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {t.replace('_', ' ').toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Value Inputs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>
+                {type === 'simple' ? 'Value' : type === 'split_group' ? 'Group 1 Value' : 'Week A Value'}
+              </label>
+              <input
+                value={val1}
+                onChange={e => setVal1(e.target.value)}
+                placeholder="e.g. 8:00 to 10:00"
+                style={{ width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', outline: 'none' }}
+              />
+            </div>
+
+            {type !== 'simple' && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-secondary)', marginBottom: '0.5rem' }}>
+                  {type === 'split_group' ? 'Group 2 Value' : 'Week B Value'}
+                </label>
+                <input
+                  value={val2}
+                  onChange={e => setVal2(e.target.value)}
+                  placeholder="e.g. 8:30 to 10:30"
+                  style={{ width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', outline: 'none' }}
+                />
+              </motion.div>
+            )}
+          </div>
+
+          {/* Day Override */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Apply To Day</label>
+            <select 
+              value={dayOverride} 
+              onChange={e => setDayOverride(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white' }}
+            >
+              <option value="all">Every Day (Standard)</option>
+              <option value="monday">Monday Only</option>
+              <option value="tuesday">Tuesday Only</option>
+              <option value="wednesday">Wednesday Only</option>
+              <option value="thursday">Thursday Only</option>
+              <option value="friday">Friday Only</option>
+              <option value="saturday">Saturday Only</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)', background: 'transparent', color: 'white', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
+            <button 
+              onClick={handleSave} 
+              style={{ flex: 2, padding: '1rem', borderRadius: '12px', border: 'none', background: 'var(--accent-primary)', color: 'white', cursor: 'pointer', fontWeight: 800, boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' }}
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
